@@ -96,12 +96,20 @@ router.get('/departamentos-stock', verifyToken, (req, res) => {
 
 router.get('/pagos-semana', verifyToken, (req, res) => {
   const sql = `
+    WITH semana AS (
+      SELECT
+        date('now', '-' || ((CAST(strftime('%w','now') AS INTEGER) + 6) % 7) || ' days') AS inicio,
+        date(date('now', '-' || ((CAST(strftime('%w','now') AS INTEGER) + 6) % 7) || ' days'), '+6 days') AS fin
+    )
     SELECT
-      SUM(total) as total,
-      COUNT(*) as cantidad_tareas
-    FROM tareas
-    WHERE estado = 'completada'
-    AND fecha_fin >= date('now', '-7 days')
+      COALESCE(SUM(t.total), 0) as total,
+      COUNT(t.id) as cantidad_tareas,
+      (SELECT inicio FROM semana) as semana_inicio,
+      (SELECT fin FROM semana) as semana_fin
+    FROM tareas t
+    WHERE t.estado = 'completada'
+      AND date(t.fecha_fin) >= (SELECT inicio FROM semana)
+      AND date(t.fecha_fin) <= (SELECT fin FROM semana)
   `;
   db.get(sql, [], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });

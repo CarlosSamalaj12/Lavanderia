@@ -242,21 +242,378 @@ router.put('/:id/entregar', verifyToken, requireEncargado, (req, res) => {
   });
 });
 
+router.put('/:id/anular-entrega', verifyToken, requireEncargado, (req, res) => {
+  const { id } = req.params;
+
+  db.get('SELECT * FROM pedidos WHERE id = ?', [id], (err, pedido) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+    if (pedido.estado !== 'entregado') {
+      return res.status(400).json({ message: 'Solo se puede anular un pedido entregado' });
+    }
+
+    db.all(
+      `SELECT id, prenda_id, cantidad_entregada
+       FROM pedidos_detalle
+       WHERE pedido_id = ?`,
+      [id],
+      (detErr, detalles) => {
+        if (detErr) return res.status(500).json({ error: detErr.message });
+
+        const revertirDetalle = (index) => {
+          if (index >= detalles.length) {
+            db.run(
+              'UPDATE pedidos SET estado = ?, fecha_entrega = NULL WHERE id = ?',
+              ['pendiente', id],
+              (upErr) => {
+                if (upErr) return res.status(500).json({ error: upErr.message });
+
+                const bitacoraSql = `
+                  INSERT INTO bitacora (usuario_id, accion, tabla_afectada, registro_id, datos_nuevos)
+                  VALUES (?, ?, ?, ?, ?)
+                `;
+                db.run(bitacoraSql, [req.userId, 'ANULAR_ENTREGA_TOTAL', 'pedidos', id, JSON.stringify({ pedido_id: id })]);
+
+                return res.json({ message: 'Entrega del pedido anulada' });
+              }
+            );
+            return;
+          }
+
+          const d = detalles[index];
+          const qty = Number(d.cantidad_entregada || 0);
+          if (qty <= 0) {
+            revertirDetalle(index + 1);
+            return;
+          }
+
+          db.all(
+            `SELECT id, cantidad FROM prendas_proceso
+             WHERE prenda_id = ? AND proceso = 'stock' AND departamento_actual = ?
+             ORDER BY id ASC`,
+            [d.prenda_id, pedido.departamento_id],
+            (stockDeptErr, stockDeptRows) => {
+              if (stockDeptErr) return res.status(500).json({ error: stockDeptErr.message });
+
+              const totalDept = (stockDeptRows || []).reduce((sum, row) => sum + Number(row.cantidad || 0), 0);
+              if (totalDept < qty) {
+                return res.status(400).json({ message: `Stock insuficiente en departamento para anular detalle ${d.id}` });
+              }
+
+              const consumirDepto = (rows, restante, done) => {
+                if (restante <= 0) return done(null);
+                if (!rows.length) return done(new Error('No fue posible descontar stock de departamento'));
+                const row = rows[0];
+                const usar = Math.min(Number(row.cantidad || 0), restante);
+                const nueva = Number(row.cantidad || 0) - usar;
+                const next = () => consumirDepto(rows.slice(1), restante - usar, done);
+                if (nueva > 0) {
+                  db.run(
+                    'UPDATE prendas_proceso SET cantidad = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?',
+                    [nueva, row.id],
+                    (uErr) => {
+                      if (uErr) return done(uErr);
+                      next();
+                    }
+                  );
+                } else {
+                  db.run('DELETE FROM prendas_proceso WHERE id = ?', [row.id], (dErr) => {
+                    if (dErr) return done(dErr);
+                    next();
+                  });
+                }
+              };
+
+              consumirDepto(stockDeptRows, qty, (consErr) => {
+                if (consErr) return res.status(500).json({ error: consErr.message });
+
+                db.get(
+                  `SELECT id FROM prendas_proceso
+                   WHERE prenda_id = ? AND proceso = 'stock' AND departamento_actual IS NULL
+                   ORDER BY id ASC LIMIT 1`,
+                  [d.prenda_id],
+                  (stockGeneralErr, stockGeneralRow) => {
+                    if (stockGeneralErr) return res.status(500).json({ error: stockGeneralErr.message });
+
+                    const afterGeneral = () => {
+                      db.run('UPDATE pedidos_detalle SET cantidad_entregada = 0 WHERE id = ?', [d.id], (updErr) => {
+                        if (updErr) return res.status(500).json({ error: updErr.message });
+                        revertirDetalle(index + 1);
+                      });
+                    };
+
+                    if (stockGeneralRow) {
+                      db.run(
+                        'UPDATE prendas_proceso SET cantidad = cantidad + ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?',
+                        [qty, stockGeneralRow.id],
+                        (sumErr) => {
+                          if (sumErr) return res.status(500).json({ error: sumErr.message });
+                          afterGeneral();
+                        }
+                      );
+                      return;
+                    }
+
+                    const sqlInsert = `
+                      INSERT INTO prendas_proceso (prenda_id, proceso, cantidad, departamento_actual, usuario_registro)
+                      VALUES (?, 'stock', ?, NULL, ?)
+                    `;
+                    db.run(sqlInsert, [d.prenda_id, qty, req.userId], (insErr) => {
+                      if (insErr) return res.status(500).json({ error: insErr.message });
+                      afterGeneral();
+                    });
+                  }
+                );
+              });
+            }
+          );
+        };
+
+        revertirDetalle(0);
+      }
+    );
+  });
+});
+
+router.put('/:id/anular-entrega-item', verifyToken, requireEncargado, (req, res) => {
+  const { id } = req.params;
+  const { detalle_id, cantidad } = req.body;
+  const qty = Number(cantidad);
+
+  if (!detalle_id || !Number.isInteger(qty) || qty <= 0) {
+    return res.status(400).json({ message: 'detalle_id y cantidad (>0) son requeridos' });
+  }
+
+  db.get('SELECT * FROM pedidos WHERE id = ?', [id], (err, pedido) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+    if (pedido.estado !== 'entregado') {
+      return res.status(400).json({ message: 'Solo se puede anular sobre pedidos entregados' });
+    }
+
+    db.get(
+      'SELECT id, pedido_id, prenda_id, cantidad, cantidad_entregada FROM pedidos_detalle WHERE id = ?',
+      [detalle_id],
+      (detErr, detalle) => {
+        if (detErr) return res.status(500).json({ error: detErr.message });
+        if (!detalle || Number(detalle.pedido_id) !== Number(id)) {
+          return res.status(400).json({ message: 'El detalle no pertenece al pedido' });
+        }
+        if (Number(detalle.cantidad_entregada || 0) < qty) {
+          return res.status(400).json({ message: `Solo hay ${detalle.cantidad_entregada || 0} entregadas en ese detalle` });
+        }
+
+        db.all(
+          `SELECT id, cantidad FROM prendas_proceso
+           WHERE prenda_id = ? AND proceso = 'stock' AND departamento_actual = ?
+           ORDER BY id ASC`,
+          [detalle.prenda_id, pedido.departamento_id],
+          (stockDeptErr, stockDeptRows) => {
+            if (stockDeptErr) return res.status(500).json({ error: stockDeptErr.message });
+
+            const totalDept = (stockDeptRows || []).reduce((sum, row) => sum + Number(row.cantidad || 0), 0);
+            if (totalDept < qty) {
+              return res.status(400).json({ message: 'Stock insuficiente en departamento para anular esa cantidad' });
+            }
+
+            const consumirDepto = (rows, restante, done) => {
+              if (restante <= 0) return done(null);
+              if (!rows.length) return done(new Error('No fue posible descontar stock de departamento'));
+              const row = rows[0];
+              const usar = Math.min(Number(row.cantidad || 0), restante);
+              const nueva = Number(row.cantidad || 0) - usar;
+              const next = () => consumirDepto(rows.slice(1), restante - usar, done);
+              if (nueva > 0) {
+                db.run(
+                  'UPDATE prendas_proceso SET cantidad = ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?',
+                  [nueva, row.id],
+                  (uErr) => {
+                    if (uErr) return done(uErr);
+                    next();
+                  }
+                );
+              } else {
+                db.run('DELETE FROM prendas_proceso WHERE id = ?', [row.id], (dErr) => {
+                  if (dErr) return done(dErr);
+                  next();
+                });
+              }
+            };
+
+            consumirDepto(stockDeptRows, qty, (consErr) => {
+              if (consErr) return res.status(500).json({ error: consErr.message });
+
+              db.get(
+                `SELECT id FROM prendas_proceso
+                 WHERE prenda_id = ? AND proceso = 'stock' AND departamento_actual IS NULL
+                 ORDER BY id ASC LIMIT 1`,
+                [detalle.prenda_id],
+                (stockGeneralErr, stockGeneralRow) => {
+                  if (stockGeneralErr) return res.status(500).json({ error: stockGeneralErr.message });
+
+                  const updateDetalle = () => {
+                    db.run(
+                      'UPDATE pedidos_detalle SET cantidad_entregada = cantidad_entregada - ? WHERE id = ?',
+                      [qty, detalle.id],
+                      (updErr) => {
+                        if (updErr) return res.status(500).json({ error: updErr.message });
+
+                        db.get(
+                          'SELECT SUM(cantidad) as total, SUM(cantidad_entregada) as total_entregado FROM pedidos_detalle WHERE pedido_id = ?',
+                          [id],
+                          (sumErr, resumen) => {
+                            if (sumErr) return res.status(500).json({ error: sumErr.message });
+                            const estado = Number(resumen?.total_entregado || 0) >= Number(resumen?.total || 0) ? 'entregado' : 'pendiente';
+                            const fechaEntrega = estado === 'entregado' ? pedido.fecha_entrega : null;
+
+                            db.run('UPDATE pedidos SET estado = ?, fecha_entrega = ? WHERE id = ?', [estado, fechaEntrega, id], (upErr) => {
+                              if (upErr) return res.status(500).json({ error: upErr.message });
+
+                              const bitacoraSql = `
+                                INSERT INTO bitacora (usuario_id, accion, tabla_afectada, registro_id, datos_nuevos)
+                                VALUES (?, ?, ?, ?, ?)
+                              `;
+                              db.run(bitacoraSql, [req.userId, 'ANULAR_ENTREGA_ITEM', 'pedidos', id, JSON.stringify({ detalle_id, cantidad: qty })]);
+
+                              return res.json({ message: 'Entrega de prenda anulada', estado });
+                            });
+                          }
+                        );
+                      }
+                    );
+                  };
+
+                  if (stockGeneralRow) {
+                    db.run(
+                      'UPDATE prendas_proceso SET cantidad = cantidad + ?, fecha_actualizacion = CURRENT_TIMESTAMP WHERE id = ?',
+                      [qty, stockGeneralRow.id],
+                      (sumErr) => {
+                        if (sumErr) return res.status(500).json({ error: sumErr.message });
+                        updateDetalle();
+                      }
+                    );
+                    return;
+                  }
+
+                  const sqlInsert = `
+                    INSERT INTO prendas_proceso (prenda_id, proceso, cantidad, departamento_actual, usuario_registro)
+                    VALUES (?, 'stock', ?, NULL, ?)
+                  `;
+                  db.run(sqlInsert, [detalle.prenda_id, qty, req.userId], (insErr) => {
+                    if (insErr) return res.status(500).json({ error: insErr.message });
+                    updateDetalle();
+                  });
+                }
+              );
+            });
+          }
+        );
+      }
+    );
+  });
+});
+
 router.delete('/:id', verifyToken, requireEncargado, (req, res) => {
   const { id } = req.params;
 
-  const sql = 'UPDATE pedidos SET estado = ? WHERE id = ?';
+  db.get('SELECT * FROM pedidos WHERE id = ?', [id], (getErr, pedido) => {
+    if (getErr) return res.status(500).json({ error: getErr.message });
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+    if (pedido.estado !== 'pendiente') {
+      return res.status(400).json({ message: 'Solo se pueden anular pedidos pendientes' });
+    }
 
-  db.run(sql, ['cancelado', id], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
+    const obs = (pedido.observaciones || '').trim();
+    const marca = '[ANULADO] Pedido no entregado';
+    const observaciones = obs ? `${obs}\n${marca}` : marca;
+    const sql = 'UPDATE pedidos SET estado = ?, observaciones = ? WHERE id = ?';
 
-    const bitacoraSql = `
-      INSERT INTO bitacora (usuario_id, accion, tabla_afectada, registro_id)
-      VALUES (?, ?, ?, ?)
-    `;
-    db.run(bitacoraSql, [req.userId, 'CANCELAR', 'pedidos', id]);
+    db.run(sql, ['cancelado', observaciones, id], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
 
-    res.json({ message: 'Pedido cancelado' });
+      const bitacoraSql = `
+        INSERT INTO bitacora (usuario_id, accion, tabla_afectada, registro_id)
+        VALUES (?, ?, ?, ?)
+      `;
+      db.run(bitacoraSql, [req.userId, 'CANCELAR', 'pedidos', id]);
+
+      res.json({ message: 'Pedido anulado (no entregado)' });
+    });
+  });
+});
+
+router.put('/:id/anular-item-pendiente', verifyToken, requireEncargado, (req, res) => {
+  const { id } = req.params;
+  const { detalle_id, cantidad } = req.body;
+  const qty = Number(cantidad);
+
+  if (!detalle_id || !Number.isInteger(qty) || qty <= 0) {
+    return res.status(400).json({ message: 'detalle_id y cantidad (>0) son requeridos' });
+  }
+
+  db.get('SELECT * FROM pedidos WHERE id = ?', [id], (pedidoErr, pedido) => {
+    if (pedidoErr) return res.status(500).json({ error: pedidoErr.message });
+    if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+    if (pedido.estado !== 'pendiente') {
+      return res.status(400).json({ message: 'Solo se pueden anular prendas en pedidos pendientes' });
+    }
+
+    db.get(
+      'SELECT id, pedido_id, prenda_id, cantidad, cantidad_entregada FROM pedidos_detalle WHERE id = ?',
+      [detalle_id],
+      (detErr, detalle) => {
+        if (detErr) return res.status(500).json({ error: detErr.message });
+        if (!detalle || Number(detalle.pedido_id) !== Number(id)) {
+          return res.status(400).json({ message: 'El detalle no pertenece al pedido' });
+        }
+        if (Number(detalle.cantidad_entregada || 0) > 0) {
+          return res.status(400).json({ message: 'No se puede anular este detalle porque ya tiene entrega registrada' });
+        }
+        if (qty > Number(detalle.cantidad || 0)) {
+          return res.status(400).json({ message: `Cantidad invalida. Solicitado en detalle: ${detalle.cantidad}` });
+        }
+
+        const restante = Number(detalle.cantidad) - qty;
+        const finalizar = () => {
+          db.get('SELECT COUNT(*) as total FROM pedidos_detalle WHERE pedido_id = ?', [id], (countErr, row) => {
+            if (countErr) return res.status(500).json({ error: countErr.message });
+            if (Number(row?.total || 0) === 0) {
+              const marca = '[ANULADO] Pedido sin detalles pendientes';
+              const obs = (pedido.observaciones || '').trim();
+              const observaciones = obs ? `${obs}\n${marca}` : marca;
+              db.run('UPDATE pedidos SET estado = ?, observaciones = ? WHERE id = ?', ['cancelado', observaciones, id], (upErr) => {
+                if (upErr) return res.status(500).json({ error: upErr.message });
+                db.run(
+                  'INSERT INTO bitacora (usuario_id, accion, tabla_afectada, registro_id, datos_nuevos) VALUES (?, ?, ?, ?, ?)',
+                  [req.userId, 'ANULAR_ITEM_PENDIENTE', 'pedidos', id, JSON.stringify({ detalle_id, cantidad: qty, cancelado: true })]
+                );
+                return res.json({ message: 'Prenda anulada y pedido marcado como cancelado' });
+              });
+              return;
+            }
+
+            db.run(
+              'INSERT INTO bitacora (usuario_id, accion, tabla_afectada, registro_id, datos_nuevos) VALUES (?, ?, ?, ?, ?)',
+              [req.userId, 'ANULAR_ITEM_PENDIENTE', 'pedidos', id, JSON.stringify({ detalle_id, cantidad: qty, cancelado: false })]
+            );
+            return res.json({ message: 'Prenda anulada del pedido pendiente' });
+          });
+        };
+
+        if (restante > 0) {
+          db.run('UPDATE pedidos_detalle SET cantidad = ? WHERE id = ?', [restante, detalle_id], (updErr) => {
+            if (updErr) return res.status(500).json({ error: updErr.message });
+            finalizar();
+          });
+          return;
+        }
+
+        db.run('DELETE FROM pedidos_detalle WHERE id = ?', [detalle_id], (delErr) => {
+          if (delErr) return res.status(500).json({ error: delErr.message });
+          finalizar();
+        });
+      }
+    );
   });
 });
 

@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { verifyToken, requireEncargado } = require('../middleware/auth');
 
-router.get('/:id', verifyToken, (req, res) => {
+router.get('/:id', verifyToken, requireEncargado, (req, res) => {
   db.get('SELECT id, username, nombre, rol, activo, departamento_id FROM usuarios WHERE id = ?', [req.params.id], (err, user) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
@@ -12,7 +12,7 @@ router.get('/:id', verifyToken, (req, res) => {
   });
 });
 
-router.get('/', verifyToken, requireAdmin, (req, res) => {
+router.get('/', verifyToken, requireEncargado, (req, res) => {
   const { rol } = req.query;
   
   let sql = `
@@ -35,12 +35,22 @@ router.get('/', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.post('/', verifyToken, requireAdmin, (req, res) => {
+router.post('/', verifyToken, requireEncargado, (req, res) => {
   const { username, password, nombre, rol, departamento_id } = req.body;
+
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede crear usuarios' });
+  }
 
   if (!username || !password || !nombre || !rol) {
     return res.status(400).json({ message: 'Todos los campos son requeridos' });
   }
+
+  if (req.userRol !== 'admin' && rol === 'admin') {
+    return res.status(403).json({ message: 'Solo un administrador puede crear otro administrador' });
+  }
+
+  const normalizedUsername = String(username || '').trim().toLowerCase();
 
   const hashedPassword = bcrypt.hashSync(password, 10);
 
@@ -49,7 +59,7 @@ router.post('/', verifyToken, requireAdmin, (req, res) => {
     VALUES (?, ?, ?, ?, ?)
   `;
 
-  db.run(sql, [username, hashedPassword, nombre, rol, departamento_id || null], function(err) {
+  db.run(sql, [normalizedUsername, hashedPassword, nombre, rol, departamento_id || null], function(err) {
     if (err) {
       if (err.message.includes('UNIQUE')) {
         return res.status(400).json({ message: 'El usuario ya existe' });
@@ -67,9 +77,17 @@ router.post('/', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.put('/:id', verifyToken, requireAdmin, (req, res) => {
+router.put('/:id', verifyToken, requireEncargado, (req, res) => {
   const { id } = req.params;
   const { nombre, rol, activo, departamento_id, password } = req.body;
+
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede editar usuarios' });
+  }
+
+  if (req.userRol !== 'admin' && rol === 'admin') {
+    return res.status(403).json({ message: 'Solo un administrador puede asignar rol administrador' });
+  }
 
   let sql = `
     UPDATE usuarios
@@ -102,8 +120,12 @@ router.put('/:id', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.delete('/:id', verifyToken, requireAdmin, (req, res) => {
+router.delete('/:id', verifyToken, requireEncargado, (req, res) => {
   const { id } = req.params;
+
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede eliminar usuarios' });
+  }
 
   const sql = 'UPDATE usuarios SET activo = 0 WHERE id = ?';
 

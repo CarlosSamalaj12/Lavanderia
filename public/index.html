@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#16213e">
+  <link rel="icon" href="./pw.ico" sizes="any">
+  <link rel="shortcut icon" href="./pw.ico">
+  <link rel="apple-touch-icon" href="./pw.ico">
+  <link rel="manifest" href="./manifest.webmanifest">
   <title>Sistema de Lavandería - Guatemala</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@1" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -165,8 +170,9 @@
       height: 60px;
       background: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      position: relative;
-      z-index: 1000;
+      position: sticky;
+      top: 0;
+      z-index: 9999;
     }
     .nav-left { display: flex; align-items: center; gap: 30px; }
     .nav-logo {
@@ -317,7 +323,7 @@
       padding: 12px 0;
       position: absolute;
       background: #16213e;
-      z-index: 100;
+      z-index: 12050;
       border-radius: 0 8px 8px 8px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.5);
       list-style: none;
@@ -485,9 +491,13 @@
     .tab:nth-child(1) { background: linear-gradient(135deg, #e74c3c, #c0392b); }
     .tab:nth-child(2) { background: linear-gradient(135deg, #27ae60, #219a52); }
     .tab:nth-child(3) { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    .tab:nth-child(4) { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
+    .tab:nth-child(5) { background: linear-gradient(135deg, #f59e0b, #d97706); }
     .tab:nth-child(1).active { box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4); }
     .tab:nth-child(2).active { box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4); }
     .tab:nth-child(3).active { box-shadow: 0 4px 12px rgba(155, 89, 182, 0.4); }
+    .tab:nth-child(4).active { box-shadow: 0 4px 12px rgba(14, 165, 233, 0.45); }
+    .tab:nth-child(5).active { box-shadow: 0 4px 12px rgba(245, 158, 11, 0.45); }
     .proceso-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 20px 0; }
     .proceso-card { padding: 15px; text-align: center; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
     .proceso-card:hover { transform: scale(1.05); }
@@ -510,6 +520,23 @@
     .toast-warning { background: #f39c12; }
     .toast-info { background: #3498db; }
     .toast-close { background: none; border: none; color: white; font-size: 16px; cursor: pointer; padding: 0; width: auto; margin-left: 10px; }
+    .dialog-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display: none; align-items: center; justify-content: center; z-index: 10050; padding: 16px; }
+    .dialog-overlay.show { display: flex; }
+    .dialog-card { width: min(460px, 100%); background: #ffffff; border-radius: 14px; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25); overflow: hidden; }
+    .dialog-head { padding: 14px 16px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+    .dialog-head h3 { margin: 0; font-size: 16px; color: #1e293b; }
+    .dialog-head-row { display: flex; align-items: center; gap: 10px; }
+    .dialog-icon { width: 30px; height: 30px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
+    .dialog-icon.danger { color: #ffffff; background: #ef4444; }
+    .dialog-icon.warning { color: #ffffff; background: #f59e0b; }
+    .dialog-icon.info { color: #ffffff; background: #3b82f6; }
+    .dialog-card.danger .dialog-head { background: #fff1f2; border-bottom-color: #fecdd3; }
+    .dialog-card.warning .dialog-head { background: #fffbeb; border-bottom-color: #fde68a; }
+    .dialog-card.info .dialog-head { background: #eff6ff; border-bottom-color: #bfdbfe; }
+    .dialog-body { padding: 16px; color: #334155; }
+    .dialog-body p { margin: 0 0 10px 0; white-space: pre-line; }
+    .dialog-input { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+    .dialog-actions { padding: 12px 16px 16px; display: flex; justify-content: flex-end; gap: 8px; }
     @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
     /* Premium Buttons */
@@ -848,7 +875,7 @@
       vertical-align: middle;
       line-height: 1;
       margin-right: 6px;
-      color: currentColor;
+      color: #ffffff;
     }
     .mi.lg { font-size: 28px; margin-right: 0; }
     .mi.xl { font-size: 36px; margin-right: 0; }
@@ -1126,6 +1153,24 @@
 </head>
 <body>
   <div id="toast-container"></div>
+  <div id="uiDialog" class="dialog-overlay" onclick="if(event.target.id==='uiDialog') closeUiDialog(false)">
+    <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="uiDialogTitle">
+      <div class="dialog-head">
+        <div class="dialog-head-row">
+          <span id="uiDialogIcon" class="dialog-icon info mi" aria-hidden="true">info</span>
+          <h3 id="uiDialogTitle">Confirmar</h3>
+        </div>
+      </div>
+      <div class="dialog-body">
+        <p id="uiDialogMessage"></p>
+        <input id="uiDialogInput" class="dialog-input" type="text" style="display:none;" />
+      </div>
+      <div class="dialog-actions">
+        <button id="uiDialogCancel" type="button" class="btn btn-secondary">Cancelar</button>
+        <button id="uiDialogConfirm" type="button" class="btn btn-success">Aceptar</button>
+      </div>
+    </div>
+  </div>
   <div id="shortcutModal" class="shortcut-modal" onclick="if(event.target.id==='shortcutModal') closeShortcutsHelp()">
     <div class="shortcut-card">
       <div class="shortcut-head">
@@ -1151,14 +1196,14 @@
   </div>
   <nav class="premium-nav" id="nav">
     <div class="nav-left">
-      <div class="nav-logo"><img id="appLogoNav" class="brand-logo-app" alt="Logo app" src="./Logo.png"><span class="mi" id="appLogoFallback" style="display:none;">local_laundry_service</span></div>
+      <div class="nav-logo"><img id="appLogoNav" class="brand-logo-app" alt="Logo app" src="./Logo Blanco app.png"><span class="mi" id="appLogoFallback" style="display:none;">local_laundry_service</span></div>
       <div class="nav-links">
         <a href="#" onclick="showSection('dashboard')" class="nav-link"><span class="mi">dashboard</span>Dashboard</a>
         
         <ul class="hList">
           <li>
             <a href="#click" class="menu">
-              <h2 class="menu-title menu-title_acciones"><span class="mi">bolt</span>Acciones ▾</h2>
+              <h2 class="menu-title menu-title_acciones"><span class="mi">bolt</span>Acciones -</h2>
               <ul class="menu-dropdown">
                 <li onclick="showSection('procesos')"><span class="mi">sync_alt</span>Procesos</li>
                 <li onclick="showSection('tareas')"><span class="mi">task_alt</span>Tareas</li>
@@ -1173,7 +1218,7 @@
         <ul class="hList">
           <li>
             <a href="#click" class="menu">
-              <h2 class="menu-title menu-title_config"><span class="mi">settings</span>Configuración ▾</h2>
+              <h2 class="menu-title menu-title_config"><span class="mi">settings</span>Configuración -</h2>
               <ul class="menu-dropdown">
                 <li onclick="showSection('prendas')"><span class="mi">checkroom</span>Prendas</li>
                 <li onclick="showSection('trabajadores')"><span class="mi">groups</span>Trabajadores</li>
@@ -1204,7 +1249,7 @@
   </nav>
 
   <div class="container">
-    <h1 id="pageTitle"><img src="./Logo.png" alt="Logo Lavanderia" class="title-logo"></h1>
+    <h1 id="pageTitle" style="display:none;"></h1>
 
     <div id="loginSection" class="login-container">
       <img src="./Logo.png" alt="Logo Lavanderia" class="login-brand-logo">
@@ -1278,7 +1323,7 @@
         <!-- Top Workers -->
         <div class="card">
           <div class="card-header">
-            <h3>🏆 Mejor Rendimiento</h3>
+            <h3><span class="mi">military_tech</span>Mejor Rendimiento</h3>
           </div>
           <div id="topWorkers" style="max-height:300px; overflow-y:auto;"></div>
         </div>
@@ -1293,15 +1338,34 @@
             <p>Pagado Esta Semana</p>
           </div>
           <div>
-            <div style="font-size:32px;">📈</div>
+            <div><span class="mi lg">local_laundry_service</span></div>
             <h3 style="color:white;" id="kpi-prendas-procesadas">0</h3>
             <p>Prendas Procesadas</p>
           </div>
           <div>
-            <div style="font-size:32px;">🎯</div>
+            <div><span class="mi lg">track_changes</span></div>
             <h3 style="color:white;" id="kpi-efectividad">0%</h3>
             <p> Efectividad</p>
           </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin:20px 0;">
+        <div class="card" style="background:linear-gradient(135deg,#0ea5e9,#0369a1); color:white;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <h3 style="margin:0; color:white;"><span class="mi">military_tech</span>Empleado Top en Procesos</h3>
+            <span class="mi lg">person</span>
+          </div>
+          <div id="kpiTopEmpleado" style="font-size:18px; font-weight:700;">-</div>
+          <div id="kpiTopEmpleadoMeta" style="margin-top:6px; opacity:0.9; font-size:13px;">Sin datos</div>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,#16a34a,#166534); color:white;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <h3 style="margin:0; color:white;"><span class="mi">workspace_premium</span>Prenda con Mas Procesos</h3>
+            <span class="mi lg">checkroom</span>
+          </div>
+          <div id="kpiTopPrenda" style="font-size:18px; font-weight:700;">-</div>
+          <div id="kpiTopPrendaMeta" style="margin-top:6px; opacity:0.9; font-size:13px;">Sin datos</div>
         </div>
       </div>
     </div>
@@ -1526,7 +1590,7 @@
                 <input type="hidden" id="pedidoDepartamento">
               </div>
               <div>
-                <label style="font-size:12px;">👤 Solicita</label>
+                <label style="font-size:12px;"><span class="mi">person</span>Quien solicita</label>
                 <input type="text" id="pedidoSolicitante" class="form-control" readonly style="background:#e9ecef; font-size:13px; padding:8px;">
               </div>
             </div>
@@ -1557,7 +1621,7 @@
           
           <div style="padding:12px 15px; flex-shrink:0; display:flex; gap:10px;">
             <button class="btn btn-success" style="flex:1; font-size:14px; padding:12px;" onclick="crearPedido()"><span class="mi">task_alt</span>Crear Pedido</button>
-            <button class="btn btn-secondary" style="font-size:14px; padding:12px 18px;" onclick="limpiarCarrito()" title="Limpiar Carrito"><span class="mi">delete</span></button>
+            <button class="btn btn-danger" style="font-size:14px; padding:12px 18px;" onclick="limpiarCarrito()" title="Limpiar Carrito"><span class="mi">delete</span></button>
           </div>
         </div>
       </div>
@@ -1573,14 +1637,14 @@
 
     <!-- Modal de Entrega de Pedido -->
     <div id="modalEntrega" class="modal">
-      <div class="modal-content">
+      <div class="modal-content modal-content-xl">
         <div class="modal-header">
           <h2><span class="mi">inventory_2</span>Entregar Pedido</h2>
-          <button class="modal-close" onclick="closeEntregaModal()">×</button>
+          <button class="modal-close" onclick="closeEntregaModal()">-</button>
         </div>
         <div class="modal-body">
           <div id="detalleEntregaPedido" style="margin-bottom:15px;"></div>
-          <div id="tablaEntregaPrendas" style="max-height:300px; overflow-y:auto;"></div>
+          <div id="tablaEntregaPrendas" style="max-height:460px; overflow-y:auto;"></div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="closeEntregaModal()"><span class="mi">close</span>Cancelar</button>
@@ -1638,7 +1702,7 @@
                 <div>
                   <strong id="nombrePrenda_externa" style="font-size:18px;"></strong>
                 </div>
-                <button onclick="limpiarPrenda_externa()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;">✕</button>
+                <button onclick="limpiarPrenda_externa()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;">o.</button>
               </div>
             </div>
             
@@ -1720,7 +1784,7 @@
       <div class="modal-content">
         <div class="modal-header">
       <h2><span class="mi">sync</span>Devolver Prendas</h2>
-          <button class="modal-close" onclick="closeDevolucionModal()">×</button>
+          <button class="modal-close" onclick="closeDevolucionModal()">-</button>
         </div>
         <div class="modal-body">
           <div id="infoDevolucion" style="margin-bottom:15px;"></div>
@@ -1731,7 +1795,7 @@
           <div style="margin-top:15px; padding:15px; background:#f8f9fa; border-radius:8px;">
             <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
               <input type="radio" name="condicionDevolucion" value="limpio" checked>
-              <span style="font-size:24px;">🧺</span>
+              <span style="font-size:24px;">Y</span>
               <strong>Limpia</strong> - Pasa directo a Stock
             </label>
             <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-top:10px;">
@@ -1753,12 +1817,12 @@
       <div class="modal-content">
         <div class="modal-header">
           <h2><span class="mi">task_alt</span>Completar tarea</h2>
-          <button class="modal-close" onclick="closeCompletarTareaModal()">×</button>
+          <button class="modal-close" onclick="closeCompletarTareaModal()">-</button>
         </div>
         <div class="modal-body">
           <p id="completarTareaInfo" style="margin-bottom:12px; color:#5f7287;"></p>
           <div class="form-group" id="groupTendedor" style="display:none;">
-            <label>Trabajador para Tendido (opcional)</label>
+            <label>Trabajador para Tendido</label>
             <select id="tendedorSelect" class="form-control"><option value="">Sin asignar</option></select>
           </div>
           <div class="form-group" id="groupRecogedor" style="display:none;">
@@ -1782,6 +1846,10 @@
     <div id="prendas" class="content">
       <h2>Catálogo de Prendas</h2>
       <button class="btn btn-primary" onclick="showPrendaModal()"><span class="mi">add</span>Nueva Prenda</button>
+      <button class="btn btn-primary" onclick="descargarPlantillaPrendas()"><span class="mi">download</span>Descargar Plantilla</button>
+      <button class="btn btn-success" onclick="abrirImportacionPrendas()"><span class="mi">upload</span>Importar Plantilla</button>
+      <input type="text" id="filtroPrendaNombre" class="form-control" placeholder="Filtrar por nombre de prenda..." style="max-width:320px; display:inline-block; margin-left:10px;" oninput="loadPrendas()">
+      <input type="file" id="archivoImportacionPrendas" accept=".csv" style="display:none;" onchange="importarPrendasDesdeArchivo(event)">
       <table id="tablaPrendas"></table>
     </div>
 
@@ -1799,7 +1867,7 @@
     </div>
 
     <div id="usuarios" class="content">
-      <h2>👥 Gestión de Usuarios</h2>
+      <h2><span class="mi">manage_accounts</span>Gestion de Usuarios</h2>
       <p style="color:#7f8c8d; margin-bottom:20px;">Usuarios que pueden acceder al sistema. Cada usuario puede pertenecer a un departamento.</p>
       <button class="btn btn-primary" onclick="showUsuarioModal()"><span class="mi">person_add</span>Nuevo Usuario</button>
       <div id="filtroUsuarios" style="margin:15px 0;">
@@ -1807,6 +1875,7 @@
           <option value="">Todos los roles</option>
           <option value="admin">Administrador</option>
           <option value="encargado">Encargado</option>
+          <option value="reportes">Reportes</option>
           <option value="trabajador">Trabajador</option>
           <option value="solicitante">Solicitante</option>
         </select>
@@ -1846,25 +1915,6 @@
           </div>
         </div>
       </div>
-
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin:20px 0;">
-        <div class="card" style="background:linear-gradient(135deg,#0ea5e9,#0369a1); color:white;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-            <h3 style="margin:0; color:white;"><span class="mi">military_tech</span>Empleado Top en Procesos</h3>
-            <span class="mi lg">person</span>
-          </div>
-          <div id="kpiTopEmpleado" style="font-size:18px; font-weight:700;">-</div>
-          <div id="kpiTopEmpleadoMeta" style="margin-top:6px; opacity:0.9; font-size:13px;">Sin datos</div>
-        </div>
-        <div class="card" style="background:linear-gradient(135deg,#16a34a,#166534); color:white;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-            <h3 style="margin:0; color:white;"><span class="mi">workspace_premium</span>Prenda con Mas Procesos</h3>
-            <span class="mi lg">checkroom</span>
-          </div>
-          <div id="kpiTopPrenda" style="font-size:18px; font-weight:700;">-</div>
-          <div id="kpiTopPrendaMeta" style="margin-top:6px; opacity:0.9; font-size:13px;">Sin datos</div>
-        </div>
-      </div>
     </div>
 
     <div id="reportes" class="content">
@@ -1878,6 +1928,13 @@
           <div class="form-group" style="margin-bottom:0;">
             <label>Fecha Final</label>
             <input type="date" id="reporteFechaFin" class="form-control">
+          </div>
+          <div class="form-group" style="margin-bottom:0;" id="filtroSemanaWrap">
+            <label>Semana (Lun-Dom)</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input type="week" id="reporteSemana" class="form-control" style="min-width:160px;">
+              <button class="btn btn-primary" type="button" style="width:42px; min-width:42px; max-width:42px; padding:10px 0; display:inline-flex; align-items:center; justify-content:center;" onclick="aplicarSemanaReporte()" title="Aplicar semana"><span class="mi" style="margin-right:0;">calendar_month</span></button>
+            </div>
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label>Trabajador</label>
@@ -1911,6 +1968,22 @@
             <div id="reportePrendaResultados" class="search-results" style="display:none;"></div>
             <div id="contadorPrendaReporte" class="search-counter"></div>
           </div>
+          <div class="form-group" style="margin-bottom:0; display:none;" id="filtroProcesoTareaWrap">
+            <label>Proceso</label>
+            <select id="reporteProcesoTarea" class="form-control">
+              <option value="">Todos los procesos</option>
+              <option value="sucio">Sucio</option>
+              <option value="remojo">Remojo</option>
+              <option value="lavado">Lavado</option>
+              <option value="tendido">Tendido</option>
+              <option value="recogido">Recogido</option>
+              <option value="reproceso">Reproceso</option>
+              <option value="limpio">Limpio</option>
+              <option value="planchado">Planchado</option>
+              <option value="desmanche">Desmanche</option>
+              <option value="stock">Stock</option>
+            </select>
+          </div>
           <div class="form-group" style="margin-bottom:0;">
             <button class="btn btn-primary" onclick="aplicarFiltros()"><span class="mi">filter_alt</span>Aplicar Filtros</button>
           </div>
@@ -1931,7 +2004,51 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script>
     console.log('Script loading...');
-    const API = 'http://localhost:3001/api';
+    const API = (() => {
+      const configuredApi = (localStorage.getItem('api_base_url') || '').trim();
+
+      if (configuredApi) {
+        try {
+          const parsed = configuredApi.startsWith('http')
+            ? new URL(configuredApi)
+            : new URL(configuredApi, window.location.origin);
+          if (
+            parsed.hostname === window.location.hostname &&
+            parsed.port === '8000' &&
+            parsed.pathname.startsWith('/api')
+          ) {
+            localStorage.removeItem('api_base_url');
+          } else {
+            return parsed.toString().replace(/\/+$/, '');
+          }
+        } catch (_) {
+          localStorage.removeItem('api_base_url');
+        }
+      }
+
+      const isLocalhost =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1';
+
+      if (isLocalhost && window.location.port && window.location.port !== '3100') {
+        return `${window.location.protocol}//${window.location.hostname}:3100/api`;
+      }
+
+      if (window.location.port === '8000') {
+        return `${window.location.protocol}//${window.location.hostname}:3100/api`;
+      }
+
+      return new URL('/api', window.location.origin).toString().replace(/\/+$/, '');
+    })();
+
+    function buildApiUrl(path) {
+      const safePath = String(path || '').replace(/^\/+/, '');
+      try {
+        return new URL(safePath, `${API}/`).toString();
+      } catch (_) {
+        return new URL(`/api/${safePath}`, window.location.origin).toString();
+      }
+    }
     let token = localStorage.getItem('token');
     let user = JSON.parse(localStorage.getItem('user') || '{}');
     let currentSection = 'dashboard';
@@ -2066,7 +2183,7 @@
     // Configuración de timezone Guatemala (UTC-6)
     const TIMEZONE = 'America/Guatemala';
 
-    // Función para formatear货币 en Quetzales Guatemaltecos
+    // Funcion para formatear moneda en Quetzales Guatemaltecos
     function formatCurrency(amount) {
       return 'Q ' + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
@@ -2163,7 +2280,7 @@
         img.style.display = 'inline-block';
         fallback.style.display = 'none';
       } else {
-        img.src = './Logo.png';
+        img.src = './Logo Blanco app.png';
         img.style.display = 'inline-block';
         fallback.style.display = 'none';
       }
@@ -2337,7 +2454,7 @@
       toast.className = `toast toast-${type}`;
       toast.innerHTML = `
         <span>${message}</span>
-        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        <button class="toast-close" onclick="this.parentElement.remove()">-</button>
       `;
       container.appendChild(toast);
       setTimeout(() => {
@@ -2349,6 +2466,105 @@
     function showError(msg) { showToast(msg, 'error'); }
     function showWarning(msg) { showToast(msg, 'warning'); }
     function showInfo(msg) { showToast(msg, 'info'); }
+
+    const uiDialogState = { resolver: null, mode: 'confirm' };
+
+    function closeUiDialog(result) {
+      const overlay = document.getElementById('uiDialog');
+      const input = document.getElementById('uiDialogInput');
+      if (overlay) overlay.classList.remove('show');
+      if (input) {
+        input.value = '';
+        input.style.display = 'none';
+      }
+      if (uiDialogState.resolver) {
+        const resolve = uiDialogState.resolver;
+        uiDialogState.resolver = null;
+        resolve(result);
+      }
+    }
+
+    function getDialogTone({ title, message, tone }) {
+      if (tone) return tone;
+      const text = `${title || ''} ${message || ''}`.toLowerCase();
+      if (/eliminar|anular|cancelar|riesgo|permanente/.test(text)) return 'danger';
+      if (/atencion|advertencia|warning|confirmar/.test(text)) return 'warning';
+      return 'info';
+    }
+
+    function resolveDialogConfirmLabel({ mode, title, message, confirmLabel }) {
+      if (confirmLabel) return confirmLabel;
+      if (mode === 'prompt') return 'Continuar';
+      const text = `${title || ''} ${message || ''}`.toLowerCase();
+      if (/eliminar/.test(text)) return 'Eliminar';
+      if (/anular/.test(text)) return 'Anular';
+      if (/cancelar/.test(text)) return 'Cancelar';
+      return 'Aceptar';
+    }
+
+    function showUiDialog({ title, message, mode = 'confirm', defaultValue = '', placeholder = '', tone = '', confirmLabel = '', cancelLabel = 'Cancelar' }) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('uiDialog');
+        const card = overlay ? overlay.querySelector('.dialog-card') : null;
+        const titleEl = document.getElementById('uiDialogTitle');
+        const iconEl = document.getElementById('uiDialogIcon');
+        const messageEl = document.getElementById('uiDialogMessage');
+        const input = document.getElementById('uiDialogInput');
+        const btnCancel = document.getElementById('uiDialogCancel');
+        const btnConfirm = document.getElementById('uiDialogConfirm');
+        if (!overlay || !card || !titleEl || !iconEl || !messageEl || !input || !btnCancel || !btnConfirm) {
+          resolve(mode === 'prompt' ? null : false);
+          return;
+        }
+
+        uiDialogState.mode = mode;
+        uiDialogState.resolver = resolve;
+        const dialogTone = getDialogTone({ title, message, tone });
+        titleEl.textContent = title || 'Confirmar';
+        messageEl.textContent = message || '';
+        card.classList.remove('danger', 'warning', 'info');
+        card.classList.add(dialogTone);
+        iconEl.className = `dialog-icon ${dialogTone} mi`;
+        iconEl.textContent = dialogTone === 'danger' ? 'dangerous' : dialogTone === 'warning' ? 'warning' : 'info';
+
+        if (mode === 'prompt') {
+          input.style.display = 'block';
+          input.value = defaultValue || '';
+          input.placeholder = placeholder || '';
+        } else {
+          input.style.display = 'none';
+        }
+
+        btnConfirm.textContent = resolveDialogConfirmLabel({ mode, title, message, confirmLabel });
+        btnCancel.textContent = cancelLabel || 'Cancelar';
+
+        btnConfirm.classList.remove('btn-success', 'btn-warning', 'btn-danger', 'btn-primary');
+        btnConfirm.classList.add(dialogTone === 'danger' ? 'btn-danger' : dialogTone === 'warning' ? 'btn-warning' : 'btn-primary');
+
+        btnCancel.onclick = () => closeUiDialog(mode === 'prompt' ? null : false);
+        btnConfirm.onclick = () => {
+          if (mode === 'prompt') {
+            closeUiDialog(input.value);
+          } else {
+            closeUiDialog(true);
+          }
+        };
+
+        overlay.classList.add('show');
+        setTimeout(() => {
+          if (mode === 'prompt') input.focus();
+          else btnConfirm.focus();
+        }, 0);
+      });
+    }
+
+    async function confirmDialog(message, title = 'Confirmar accion', tone = '', confirmLabel = '', cancelLabel = 'Cancelar') {
+      return showUiDialog({ title, message, mode: 'confirm', tone, confirmLabel, cancelLabel });
+    }
+
+    async function promptDialog(message, defaultValue = '', title = 'Ingresa un valor', placeholder = '', tone = '', confirmLabel = 'Continuar', cancelLabel = 'Cancelar') {
+      return showUiDialog({ title, message, mode: 'prompt', defaultValue, placeholder, tone, confirmLabel, cancelLabel });
+    }
 
     function focusField(fieldId, message, type = 'warning') {
       const el = document.getElementById(fieldId);
@@ -2412,11 +2628,20 @@
       }
 
       try {
-        const res = await fetch(`${API}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
+        let res;
+        try {
+          res = await fetch(buildApiUrl('auth/login'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+        } catch (_) {
+          res = await fetch(new URL('/api/auth/login', window.location.origin).toString(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+        }
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Error');
 
@@ -2437,6 +2662,12 @@
       location.reload();
     }
 
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
     function showApp() {
       document.getElementById('loginSection').style.display = 'none';
       document.getElementById('nav').style.display = 'flex';
@@ -2445,6 +2676,8 @@
       if (brandingMenu) {
         brandingMenu.style.display = user.rol === 'admin' ? '' : 'none';
       }
+
+      applyRoleUiRestrictions();
       
       // Actualizar info del usuario en el nav
       const userName = user.nombre || user.username || 'Usuario';
@@ -2466,7 +2699,61 @@
         document.getElementById('userDeptoNav').textContent = 'Sin departamento';
       }
       
-      showSection('dashboard');
+      showSection(user.rol === 'solicitante' ? 'pedidos' : 'dashboard');
+    }
+
+    function canAccessSection(section) {
+      if (user.rol !== 'solicitante') return true;
+      return section === 'pedidos';
+    }
+
+    function applyRoleUiRestrictions() {
+      if (user.rol === 'reportes') {
+        const bloqueados = [
+          'button[onclick="showPrendaModal()"]',
+          'button[onclick="showDepartamentoModal()"]',
+          'button[onclick="showUsuarioModal()"]',
+          '#formTarea button[type="submit"]',
+          '#btnAgregarPrendaTarea'
+        ];
+
+        bloqueados.forEach((selector) => {
+          const el = document.querySelector(selector);
+          if (el) el.style.display = 'none';
+        });
+
+        const rolSelect = document.getElementById('usuarioRol');
+        if (rolSelect) {
+          const adminOption = rolSelect.querySelector('option[value="admin"]');
+          if (adminOption) adminOption.style.display = 'none';
+        }
+
+        return;
+      }
+
+      if (user.rol !== 'solicitante') return;
+
+      const sectionsToHide = [
+        'dashboard', 'procesos', 'tareas', 'devoluciones', 'externa',
+        'departamentos', 'prendas', 'trabajadores', 'trabajadores-internos',
+        'usuarios', 'branding', 'reportes'
+      ];
+
+      sectionsToHide.forEach((id) => {
+        const node = document.getElementById(id);
+        if (node) node.style.display = 'none';
+      });
+
+      const navClickable = document.querySelectorAll('[onclick*="showSection("]');
+      navClickable.forEach((el) => {
+        const onclick = el.getAttribute('onclick') || '';
+        const match = onclick.match(/showSection\('([^']+)'\)/);
+        if (!match) return;
+        const section = match[1];
+        if (section !== 'pedidos') {
+          el.style.display = 'none';
+        }
+      });
     }
 
     function openShortcutsHelp() {
@@ -2560,6 +2847,11 @@
     });
 
     function showSection(section) {
+      if (!canAccessSection(section)) {
+        showWarning('Tu rol solo tiene acceso a Pedidos.');
+        section = 'pedidos';
+      }
+
       if (section === 'branding' && user.rol !== 'admin') {
         showError('Solo el administrador puede acceder a Branding');
         section = 'dashboard';
@@ -2616,11 +2908,13 @@
       const showPedidos = tipo === 'pedidos' || tipo === 'pedidos-resumen';
       const showPagos = tipo === 'pagos' || tipo === 'pagos-resumen' || tipo === 'tareas-completadas';
       const showPrenda = tipo === 'stock-prenda';
+      const showProcesoTarea = tipo === 'tareas-completadas';
       document.getElementById('filtroDepartamentoWrap').style.display = showPedidos ? 'block' : 'none';
       document.getElementById('filtroEstadoPedidoWrap').style.display = tipo === 'pedidos' ? 'block' : 'none';
       document.getElementById('filtroNumeroPedidoWrap').style.display = tipo === 'pedidos' ? 'block' : 'none';
       document.getElementById('reporteTrabajador').parentElement.style.display = showPagos ? 'block' : 'none';
       document.getElementById('filtroPrendaWrap').style.display = showPrenda ? 'block' : 'none';
+      document.getElementById('filtroProcesoTareaWrap').style.display = showProcesoTarea ? 'block' : 'none';
     }
 
     async function buscarPrendaReporte() {
@@ -2690,6 +2984,46 @@
       const activeTab = document.querySelector('.tab.active')?.id || 'tab-pedidos';
       const tipoActual = activeTab.replace('tab-', '');
       reporte(tipoActual);
+    }
+
+    function getMondayFromIsoWeek(weekValue) {
+      if (!weekValue || !weekValue.includes('-W')) return null;
+      const parts = weekValue.split('-W');
+      const year = Number(parts[0]);
+      const week = Number(parts[1]);
+      if (!year || !week) return null;
+
+      const jan4 = new Date(year, 0, 4);
+      const jan4Day = jan4.getDay() || 7;
+      const mondayWeek1 = new Date(jan4);
+      mondayWeek1.setDate(jan4.getDate() - jan4Day + 1);
+
+      const monday = new Date(mondayWeek1);
+      monday.setDate(mondayWeek1.getDate() + (week - 1) * 7);
+      return monday;
+    }
+
+    function formatDateInput(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function aplicarSemanaReporte() {
+      const week = document.getElementById('reporteSemana').value;
+      const monday = getMondayFromIsoWeek(week);
+      if (!monday) {
+        showWarning('Selecciona una semana valida.');
+        return;
+      }
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      document.getElementById('reporteFechaInicio').value = formatDateInput(monday);
+      document.getElementById('reporteFechaFin').value = formatDateInput(sunday);
+      actualizarMinFechaFin();
+      aplicarFiltros();
     }
 
     async function loadDashboard() {
@@ -2774,7 +3108,7 @@
           <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:#f8f9fa; border-radius:8px; margin-bottom:8px; border-left:4px solid ${procesoColors[t.proceso] || '#3498db'};">
             <div>
               <strong>${t.trabajador_nombre}</strong>
-              <div style="font-size:12px; color:#7f8c8d;">${t.cantidad} × ${t.prenda_nombre}</div>
+              <div style="font-size:12px; color:#7f8c8d;">${t.cantidad} - ${t.prenda_nombre}</div>
             </div>
             <span style="background:${procesoColors[t.proceso] || '#3498db'}; color:white; padding:4px 12px; border-radius:20px; font-size:12px; text-transform:uppercase;">${t.proceso}</span>
           </div>
@@ -2789,7 +3123,7 @@
         document.getElementById('topWorkers').innerHTML = '<p style="text-align:center; color:#95a5a6; padding:20px;">No hay datos de trabajadores</p>';
       } else {
         const top3 = workersData.sort((a, b) => b.total_pagar - a.total_pagar).slice(0, 3);
-        const medals = ['🥇', '🥈', '🥉'];
+        const medals = ['#1', '#2', '#3'];
         document.getElementById('topWorkers').innerHTML = top3.map((w, i) => `
           <div style="display:flex; align-items:center; gap:15px; padding:15px; background:#f8f9fa; border-radius:8px; margin-bottom:8px;">
             <span style="font-size:28px;">${medals[i]}</span>
@@ -3033,7 +3367,7 @@
       });
       
       let html = '<div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-top:10px;">';
-      html += '<h4 style="margin:0 0 10px 0;">📊 Stock y Trazabilidad de: ' + prendaSeleccionadaTarea.nombre + '</h4>';
+      html += '<h4 style="margin:0 0 10px 0;"><span class="mi">inventory_2</span>Stock y Trazabilidad de: ' + prendaSeleccionadaTarea.nombre + '</h4>';
       
       const procesoOrden = ['sucio', 'remojo', 'lavado', 'tendido', 'recogido', 'reproceso', 'limpio', 'planchado', 'desmanche', 'stock'];
       const procesoNombres = { 'sucio': 'SUCIO', 'remojo': 'REMOJO', 'lavado': 'LAVADO', 'tendido': 'TENDIDO', 'recogido': 'RECOGIDO', 'reproceso': 'REPROCESO', 'limpio': 'LIMPIO', 'planchado': 'PLANCHADO', 'desmanche': 'DESMANCHE', 'stock': 'STOCK' };
@@ -3054,7 +3388,7 @@
         });
       }
       
-      html += '<p style="margin-top:10px; font-size:12px; color:#95a5a6;">💡 El stock se muestra por proceso y departamento.</p></div>';
+      html += '<p style="margin-top:10px; font-size:12px; color:#95a5a6;">El stock se muestra por proceso y departamento.</p></div>';
       
       document.getElementById('stockInfoPrenda').innerHTML = html;
       document.getElementById('stockInfoPrenda').style.display = 'block';
@@ -3236,7 +3570,7 @@
           </div>`;
         });
         
-        html += '<p style="margin-top:15px; font-size:13px; color:#856404;">💡 <strong>Nota:</strong> Las prendas deben pasar por los procesos en orden (Sucio → Remojo → Lavado → ... → Stock)</p>';
+        html += '<p style="margin-top:15px; font-size:13px; color:#856404;"><strong>Nota:</strong> Las prendas deben pasar por los procesos en orden (Sucio -> Remojo -> Lavado -> ... -> Stock)</p>';
       }
       
       html += '</div>';
@@ -3249,7 +3583,7 @@
       if (totalDisponible > 0) {
         document.getElementById('stockInfoPrenda').innerHTML += `
           <button class="btn btn-warning" style="margin-top:10px; width:100%;" onclick="usarStockDisponible(${prendaId}, '${nombrePrenda.replace(/'/g, "\\'")}', ${Math.min(totalDisponible, cantidadSolicitada)})">
-            ⚡ Usar Stock Disponible (${totalDisponible})
+            s Usar Stock Disponible (${totalDisponible})
           </button>
         `;
       }
@@ -3268,7 +3602,7 @@
             <span class="prenda-item-cantidad">${p.cantidad}</span>
             <span class="prenda-item-name">${p.nombre}</span>
           </div>
-          <button class="prenda-item-remove" onclick="quitarPrendaTarea(${i})">×</button>
+          <button class="prenda-item-remove" onclick="quitarPrendaTarea(${i})">-</button>
         </div>
       `).join('');
       updateTareaDraftSummary();
@@ -3363,7 +3697,7 @@
             </div>
             <div class="task-item-body">
               <strong>${t.proceso.toUpperCase()}</strong><br>
-              ${t.cantidad} × ${t.prenda_nombre}
+              ${t.cantidad} - ${t.prenda_nombre}
               ${Number(t.es_automatica) === 1 ? '<div style="margin-top:8px;"><span style="display:inline-flex; align-items:center; gap:5px; background:#e0f2fe; color:#075985; border:1px solid #7dd3fc; border-radius:999px; padding:3px 10px; font-size:11px; font-weight:700;"><span class="mi" style="font-size:14px; margin-right:0;">smart_toy</span>Auto-generada</span></div>' : ''}
             </div>
             <div class="task-item-meta">
@@ -3391,10 +3725,10 @@
       tendedorSelect.innerHTML = options;
       recogedorSelect.innerHTML = options;
 
-      groupTendedor.style.display = proceso === 'lavado' ? 'block' : 'none';
+      groupTendedor.style.display = 'none';
       groupRecogedor.style.display = proceso === 'tendido' ? 'block' : 'none';
       info.textContent = proceso === 'lavado'
-        ? 'Esta tarea creara automaticamente la tarea de Tendido.'
+        ? 'Esta tarea creara automaticamente la tarea de Tendido con el mismo trabajador.'
         : (proceso === 'tendido'
           ? 'Esta tarea creara automaticamente la tarea de Recogido.'
           : 'Confirma para completar la tarea.');
@@ -3412,10 +3746,6 @@
       if (!completarContext) return;
       const { id, proceso } = completarContext;
       const payload = {};
-      if (proceso === 'lavado') {
-        const tendedor = document.getElementById('tendedorSelect').value;
-        if (tendedor) payload.tendedor_nombre = tendedor;
-      }
       if (proceso === 'tendido') {
         const recogedor = document.getElementById('recogedorSelect').value;
         if (recogedor) payload.recogedor_nombre = recogedor;
@@ -3442,7 +3772,7 @@
     }
 
     async function cancelarTarea(id) {
-      if (confirm('¿Cancelar esta tarea?')) {
+      if (await confirmDialog('¿Cancelar esta tarea?')) {
         const res = await fetch(`${API}/tareas/${id}/cancelar`, {
           method: 'PUT',
           headers: { 'x-access-token': token }
@@ -3489,24 +3819,20 @@
       document.getElementById('pedidoSolicitante').value = user.nombre || user.usuario || '';
       
       // Cargar lista de prendas disponibles para pedido rápido
-      const resPrendas = await fetch(`${API}/prendas/stock/resumen`, { headers: { 'x-access-token': token } });
+      const resPrendas = await fetch(`${API}/prendas/stock/disponible-despacho`, { headers: { 'x-access-token': token } });
       const stockData = await resPrendas.json();
       
       // Agrupar por prenda
-      const prendasAgrupadas = {};
+      const stockPorPrenda = {};
       stockData.forEach(s => {
-        if (!prendasAgrupadas[s.prenda]) {
-          prendasAgrupadas[s.prenda] = {};
-        }
-        prendasAgrupadas[s.prenda][s.proceso] = s.cantidad;
+        stockPorPrenda[s.prenda] = Number(s.cantidad || 0);
       });
       
       const resPrendasCat = await fetch(`${API}/prendas`, { headers: { 'x-access-token': token } });
       const prendasCat = await resPrendasCat.json();
       
       document.getElementById('listaPrendasDisponibles').innerHTML = prendasCat.map(p => {
-        const stock = prendasAgrupadas[p.nombre] || {};
-        const totalStock = Object.values(stock).reduce((a, b) => a + b, 0);
+        const totalStock = Number(stockPorPrenda[p.nombre] || 0);
         return `<div class="prenda-item" onclick="seleccionarPrendaPedido(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')" style="cursor:pointer; padding:12px 10px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center; background:white; border-radius:5px; margin:3px 0;">
           <span style="font-weight:600; font-size:14px; color:#2c3e50;">${p.nombre}</span>
           <span style="background:${totalStock > 0 ? '#27ae60' : '#e74c3c'}; color:white; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:bold;">${totalStock} uds</span>
@@ -3529,10 +3855,149 @@
           <td><span class="badge" style="background:${estadoColors[p.estado]}; color:white;">${p.estado}</span></td>
           <td style="white-space:nowrap;">
             ${p.estado === 'pendiente' ? `<button class="btn btn-success btn-table" title="Entregar" onclick="abrirEntrega(${p.id})"><span class="mi">done</span></button>` : ''}
+            ${p.estado === 'pendiente' ? `<button class="btn btn-warning btn-table" title="Anular pedido pendiente" onclick="anularPedidoPendiente(${p.id})"><span class="mi">block</span></button>` : ''}
             <button class="btn btn-primary btn-table" title="Imprimir" onclick="imprimirTicket(${p.id})"><span class="mi">print</span></button>
           </td>
         </tr>`).join('')}</tbody></table>
       `;
+    }
+
+    async function anularPedidoPendiente(pedidoId) {
+      const ok = await confirmDialog(`Se anulara todo el pedido pendiente #${pedidoId}.\n\nQuedara marcado como NO ENTREGADO.\n\nDeseas continuar?`, 'Anular pedido pendiente');
+      if (!ok) return;
+
+      const res = await fetch(`${API}/pedidos/${pedidoId}`, {
+        method: 'DELETE',
+        headers: { 'x-access-token': token }
+      });
+
+      if (res.ok) {
+        showSuccess('Pedido pendiente anulado (no entregado)');
+        loadPedidos();
+      } else {
+        const err = await res.json();
+        showError(err.message || 'No se pudo anular el pedido pendiente');
+      }
+    }
+
+    async function anularItemPendiente(pedidoId) {
+      const resPedido = await fetch(`${API}/pedidos/${pedidoId}`, { headers: { 'x-access-token': token } });
+      if (!resPedido.ok) {
+        showError('No se pudo cargar el pedido');
+        return;
+      }
+
+      const pedido = await resPedido.json();
+      if (pedido.estado !== 'pendiente') {
+        showWarning('Solo se pueden anular prendas en pedidos pendientes');
+        return;
+      }
+
+      const opciones = (pedido.detalles || [])
+        .filter(d => Number(d.cantidad_entregada || 0) === 0)
+        .map(d => `ID ${d.id}: ${d.prenda_nombre} (solicitado ${d.cantidad})`)
+        .join('\n');
+
+      if (!opciones) {
+        showWarning('No hay prendas pendientes para anular en este pedido');
+        return;
+      }
+
+      const detalleIdTxt = await promptDialog(`Selecciona el ID del detalle a anular:\n\n${opciones}`, '', 'Anular prenda pendiente', 'Escribe el ID del detalle');
+      const detalleId = Number(detalleIdTxt || 0);
+      if (!detalleId) return;
+
+      const detalle = (pedido.detalles || []).find(d => Number(d.id) === detalleId);
+      if (!detalle) {
+        showError('El detalle indicado no pertenece al pedido');
+        return;
+      }
+
+      const maximo = Number(detalle.cantidad || 0);
+      const cantidadTxt = await promptDialog(`Cantidad a anular para "${detalle.prenda_nombre}" (max ${maximo}):`, `${maximo}`, 'Cantidad a anular', 'Cantidad');
+      const cantidad = Number(cantidadTxt || 0);
+      if (!cantidad || cantidad <= 0) return;
+
+      const res = await fetch(`${API}/pedidos/${pedidoId}/anular-item-pendiente`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-access-token': token },
+        body: JSON.stringify({ detalle_id: detalleId, cantidad })
+      });
+
+      if (res.ok) {
+        showSuccess('Prenda anulada del pedido pendiente');
+        loadPedidos();
+      } else {
+        const err = await res.json();
+        showError(err.message || 'No se pudo anular la prenda del pedido');
+      }
+    }
+
+    async function anularEntregaTotal(pedidoId) {
+      const ok = await confirmDialog(`Se anulara todo el despacho del pedido #${pedidoId}.\n\nEsto regresara todas las prendas entregadas al stock general.\n\nDeseas continuar?`, 'Anular despacho completo');
+      if (!ok) return;
+
+      const res = await fetch(`${API}/pedidos/${pedidoId}/anular-entrega`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-access-token': token },
+        body: JSON.stringify({})
+      });
+
+      if (res.ok) {
+        showSuccess('Despacho completo anulado');
+        loadPedidos();
+      } else {
+        const err = await res.json();
+        showError(err.message || 'No se pudo anular el despacho completo');
+      }
+    }
+
+    async function anularEntregaItem(pedidoId) {
+      const resPedido = await fetch(`${API}/pedidos/${pedidoId}`, { headers: { 'x-access-token': token } });
+      if (!resPedido.ok) {
+        showError('No se pudo cargar el pedido');
+        return;
+      }
+
+      const pedido = await resPedido.json();
+      const opciones = (pedido.detalles || [])
+        .filter(d => Number(d.cantidad_entregada || 0) > 0)
+        .map(d => `ID ${d.id}: ${d.prenda_nombre} (entregado ${d.cantidad_entregada}/${d.cantidad})`)
+        .join('\n');
+
+      if (!opciones) {
+        showWarning('Este pedido no tiene prendas entregadas para anular');
+        return;
+      }
+
+      const detalleIdTxt = await promptDialog(`Selecciona el ID del detalle a anular:\n\n${opciones}`, '', 'Anular prenda entregada', 'Escribe el ID del detalle');
+      const detalleId = Number(detalleIdTxt || 0);
+      if (!detalleId) return;
+
+      const detalle = (pedido.detalles || []).find(d => Number(d.id) === detalleId);
+      if (!detalle) {
+        showError('El detalle indicado no pertenece al pedido');
+        return;
+      }
+
+      const maximo = Number(detalle.cantidad_entregada || 0);
+      const cantidadTxt = await promptDialog(`Cantidad a anular para "${detalle.prenda_nombre}" (max ${maximo}):`, `${maximo}`, 'Cantidad a anular', 'Cantidad');
+      const cantidad = Number(cantidadTxt || 0);
+      if (!cantidad || cantidad <= 0) return;
+
+      const res = await fetch(`${API}/pedidos/${pedidoId}/anular-entrega-item`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'x-access-token': token },
+        body: JSON.stringify({ detalle_id: detalleId, cantidad })
+      });
+
+      if (res.ok) {
+        showSuccess('Prenda anulada correctamente');
+        loadPedidos();
+      } else {
+        const err = await res.json();
+        showError(err.message || 'No se pudo anular la prenda');
+      }
     }
 
     // Devolución de Prendas
@@ -3636,7 +4101,7 @@
               <td style="padding:10px; text-align:center;"><span style="background:${p.cantidad > 0 ? '#27ae60' : '#e74c3c'}; color:white; padding:3px 10px; border-radius:10px;">${p.cantidad}</span></td>
               <td style="padding:10px; text-align:center;">
                 <div style="display:flex; justify-content:center; gap:5px;">
-                  <button class="btn btn-success btn-table" title="Devolver Limpia" onclick="devolverPrenda(${p.prenda_id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.cantidad}, 'limpio')">🧺</button>
+                  <button class="btn btn-success btn-table" title="Devolver Limpia" onclick="devolverPrenda(${p.prenda_id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.cantidad}, 'limpio')"><span class="mi">check</span></button>
                   <button class="btn btn-warning btn-table" title="Devolver Sucia" onclick="devolverPrenda(${p.prenda_id}, '${p.nombre.replace(/'/g, "\\'")}', ${p.cantidad}, 'sucio')"><span class="mi">soap</span></button>
                 </div>
               </td>
@@ -3644,8 +4109,8 @@
           </tbody>
         </table>
         <div style="margin-top:15px; padding:15px; background:#e8f5e9; border-radius:8px;">
-          <strong>💡 Instrucciones:</strong><br>
-          🧺 <strong>Limpia:</strong> La prenda vuelve al stock directamente<br>
+          <strong><span class="mi">info</span>Instrucciones:</strong><br>
+          <span class="mi">check</span><strong>Limpia:</strong> La prenda vuelve al stock directamente<br>
           <span class="mi">soap</span><strong>Sucia:</strong> La prenda pasa al proceso SUCIO para reproceso
         </div>
       `;
@@ -4172,9 +4637,11 @@ async function enviarLavanderia_externa() {
 
     let pedidoEntregaId = null;
     let pedidoEntregaDetalles = [];
+    let pedidoEntregaAnulados = new Set();
 
     async function abrirEntrega(pedidoId) {
       pedidoEntregaId = pedidoId;
+      pedidoEntregaAnulados = new Set();
       const res = await fetch(`${API}/pedidos/${pedidoId}`, { headers: { 'x-access-token': token } });
       const pedido = await res.json();
       pedidoEntregaDetalles = pedido.detalles || [];
@@ -4186,29 +4653,28 @@ async function enviarLavanderia_externa() {
         </div>
       `;
       
-      const resStock = await fetch(`${API}/prendas/stock/resumen`, { headers: { 'x-access-token': token } });
+      const resStock = await fetch(`${API}/prendas/stock/disponible-despacho`, { headers: { 'x-access-token': token } });
       const stockData = await resStock.json();
       
       const stockMap = {};
       stockData.forEach(s => {
-        if (!stockMap[s.prenda]) stockMap[s.prenda] = {};
-        stockMap[s.prenda][s.proceso] = s.cantidad;
+        stockMap[s.prenda] = Number(s.cantidad || 0);
       });
       
       document.getElementById('tablaEntregaPrendas').innerHTML = `
-        <table style="width:100%;"><thead><tr><th>Prenda</th><th>Solicitado</th><th>Stock</th><th>Entregar</th></tr></thead>
+        <table style="width:100%;"><thead><tr><th>Prenda</th><th>Solicitado</th><th>Stock</th><th>Entregar</th><th>Accion</th></tr></thead>
         <tbody>${pedidoEntregaDetalles.map((p, i) => {
-          const stockPrenda = stockMap[p.prenda_nombre] || {};
-          const totalStock = Object.values(stockPrenda).reduce((a, b) => a + b, 0);
+          const totalStock = Number(stockMap[p.prenda_nombre] || 0);
           return `<tr>
-            <td>${p.prenda_nombre}</td>
-            <td>${p.cantidad}</td>
+            <td id="entrega_nombre_${i}">${p.prenda_nombre}</td>
+            <td id="entrega_solicitado_${i}">${p.cantidad}</td>
             <td><span style="color:${totalStock > 0 ? '#27ae60' : '#e74c3c'}; font-weight:bold;">${totalStock}</span></td>
             <td><input type="number" id="entrega_${i}" class="form-control" value="${p.cantidad}" min="0" max="${p.cantidad + 10}" style="width:80px; padding:5px;"></td>
+            <td><button type="button" class="btn btn-danger btn-table" onclick="toggleAnularEntregaItem(${i})"><span class="mi">block</span></button></td>
           </tr>`;
         }).join('')}</tbody></table>
         <div style="margin-top:10px; padding:10px; background:#e8f5e9; border-radius:5px;">
-          <small>💡 Puedes entregar más o menos de lo solicitado. El stock se descontará según la cantidad entregada.</small>
+          <small><span class="mi">info</span>Puedes entregar mas o menos de lo solicitado. Si presionas anular en una prenda, se tachara y se enviara con cantidad 0.</small>
         </div>
       `;
       
@@ -4219,16 +4685,54 @@ async function enviarLavanderia_externa() {
       document.getElementById('modalEntrega').classList.remove('show');
       pedidoEntregaId = null;
       pedidoEntregaDetalles = [];
+      pedidoEntregaAnulados = new Set();
+    }
+
+    function toggleAnularEntregaItem(index) {
+      const input = document.getElementById(`entrega_${index}`);
+      const nombre = document.getElementById(`entrega_nombre_${index}`);
+      const solicitado = document.getElementById(`entrega_solicitado_${index}`);
+      if (!input || !nombre || !solicitado) return;
+
+      if (pedidoEntregaAnulados.has(index)) {
+        pedidoEntregaAnulados.delete(index);
+        input.disabled = false;
+        if (!Number(input.value)) {
+          input.value = pedidoEntregaDetalles[index]?.cantidad || 1;
+        }
+        nombre.style.textDecoration = 'none';
+        nombre.style.opacity = '1';
+        solicitado.style.textDecoration = 'none';
+        solicitado.style.opacity = '1';
+        return;
+      }
+
+      pedidoEntregaAnulados.add(index);
+      input.value = 0;
+      input.disabled = true;
+      nombre.style.textDecoration = 'line-through';
+      nombre.style.opacity = '0.55';
+      solicitado.style.textDecoration = 'line-through';
+      solicitado.style.opacity = '0.55';
     }
 
     async function confirmarEntrega() {
       if (!pedidoEntregaId) return;
       
-      const entregas = pedidoEntregaDetalles.map((p, i) => ({
-        detalle_id: p.id,
-        prenda_id: p.prenda_id,
-        cantidad_entregada: parseInt(document.getElementById(`entrega_${i}`).value) || 0
-      }));
+      const entregas = pedidoEntregaDetalles
+        .map((p, i) => ({
+          detalle_id: p.id,
+          prenda_id: p.prenda_id,
+          cantidad_entregada: pedidoEntregaAnulados.has(i)
+            ? 0
+            : (parseInt(document.getElementById(`entrega_${i}`).value) || 0)
+        }))
+        .filter((e) => e.cantidad_entregada > 0);
+
+      if (!entregas.length) {
+        showWarning('No hay prendas marcadas para entregar.');
+        return;
+      }
       
       const res = await fetch(`${API}/pedidos/${pedidoEntregaId}/entregar`, {
         method: 'PUT',
@@ -4481,7 +4985,7 @@ async function enviarLavanderia_externa() {
             .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; page-break-after: avoid; }
             .title { font-size: 24px; font-weight: bold; }
             .section { border-bottom: 1px dashed #ccc; padding: 8px 0; margin-bottom: 8px; page-break-inside: avoid; }
-            .section-title { font-weight: bold; font-size: 16px; color: #666; text-transform: uppercase; }
+            .section-title { font-weight: 900; font-size: 24px; color: #000; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
             .info { margin: 5px 0; font-size: 18px; font-weight: bold; }
             .item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 18px; font-weight: bold; page-break-inside: avoid; }
             .footer { text-align: center; font-size: 14px; margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px; page-break-before: avoid; }
@@ -4489,8 +4993,9 @@ async function enviarLavanderia_externa() {
         </head>
         <body>
 <div class="header">
-            ${printLogo ? `<div style="margin-bottom:8px;"><img src="${printLogo}" alt="Logo" style="max-height:58px; max-width:200px; object-fit:contain;"></div>` : ''}
-            <div class="title">LAVANDERIA</div>
+            ${printLogo
+              ? `<div style="margin-bottom:10px;"><img src="${printLogo}" alt="Logo Tickets" style="max-height:130px; max-width:300px; width:auto; object-fit:contain; filter: contrast(1.35) brightness(0.9);"></div>`
+              : `<div class="title">LAVANDERIA</div>`}
             <div>Pedido #${pedidoId}</div>
           </div>
           
@@ -4520,7 +5025,8 @@ async function enviarLavanderia_externa() {
           </div>
           
           <div class="footer">
-            *** GRACIAS ***
+            <div style="font-weight:900; font-size:14px; line-height:1.25;">Hotel y Centro de Convenciones</div>
+            <div style="font-weight:900; font-size:14px; line-height:1.25;">Jardines del Lago Panajachel Solola</div>
           </div>
         </body>
         </html>
@@ -4536,18 +5042,21 @@ async function enviarLavanderia_externa() {
     async function loadPrendas() {
       const res = await fetch(`${API}/prendas`, { headers: { 'x-access-token': token } });
       const data = await res.json();
+      const filtro = (document.getElementById('filtroPrendaNombre')?.value || '').trim().toLowerCase();
+      const filtradas = (data || []).filter((p) => {
+        if (!filtro) return true;
+        return String(p.nombre || '').toLowerCase().includes(filtro);
+      });
       document.getElementById('tablaPrendas').innerHTML = `
-        <thead><tr><th rowspan="2">Nombre</th><th colspan="5" style="background:#27ae60; color:white;"><span class="mi">payments</span>CON FACTURA</th><th colspan="5" style="background:#f39c12; color:white;"><span class="mi">account_balance_wallet</span>SIN FACTURA</th><th rowspan="2">Acciones</th></tr>
-        <tr><th style="background:#27ae60; color:white;">Sucio</th><th style="background:#27ae60; color:white;">Remojo</th><th style="background:#27ae60; color:white;">Lavado</th><th style="background:#27ae60; color:white;">Desm.</th><th style="background:#27ae60; color:white;">Plancha</th><th style="background:#f39c12; color:white;">Sucio</th><th style="background:#f39c12; color:white;">Remojo</th><th style="background:#f39c12; color:white;">Lavado</th><th style="background:#f39c12; color:white;">Desm.</th><th style="background:#f39c12; color:white;">Plancha</th></tr>
+        <thead><tr><th rowspan="2">Nombre</th><th colspan="4" style="background:#27ae60; color:white;"><span class="mi">payments</span>CON FACTURA</th><th colspan="4" style="background:#f39c12; color:white;"><span class="mi">account_balance_wallet</span>SIN FACTURA</th><th rowspan="2">Acciones</th></tr>
+        <tr><th style="background:#27ae60; color:white;">Remojo</th><th style="background:#27ae60; color:white;">Lavado</th><th style="background:#27ae60; color:white;">Desm.</th><th style="background:#27ae60; color:white;">Plancha</th><th style="background:#f39c12; color:white;">Remojo</th><th style="background:#f39c12; color:white;">Lavado</th><th style="background:#f39c12; color:white;">Desm.</th><th style="background:#f39c12; color:white;">Plancha</th></tr>
         </thead>
-        <tbody>${data.map(p => `<tr>
+        <tbody>${filtradas.map(p => `<tr>
           <td><strong>${p.nombre}</strong></td>
-          <td style="background:#e8f5e9;">${formatCurrency(p.precio_sucio_factura || 0)}</td>
           <td style="background:#e8f5e9;">${formatCurrency(p.precio_remojo_factura || 0)}</td>
           <td style="background:#e8f5e9;">${formatCurrency(p.precio_lavado_factura || 0)}</td>
           <td style="background:#e8f5e9;">${formatCurrency(p.precio_desmanche_factura || 0)}</td>
           <td style="background:#e8f5e9;">${formatCurrency(p.precio_planchado_factura || 0)}</td>
-          <td style="background:#fff3e0;">${formatCurrency(p.precio_sucio || 0)}</td>
           <td style="background:#fff3e0;">${formatCurrency(p.precio_remojo || 0)}</td>
           <td style="background:#fff3e0;">${formatCurrency(p.precio_lavado || 0)}</td>
           <td style="background:#fff3e0;">${formatCurrency(p.precio_desmanche || 0)}</td>
@@ -4557,12 +5066,119 @@ async function enviarLavanderia_externa() {
       `;
     }
 
+    function descargarPlantillaPrendas() {
+      const headers = [
+        'nombre',
+        'descripcion',
+        'precio_remojo_factura',
+        'precio_lavado_factura',
+        'precio_desmanche_factura',
+        'precio_planchado_factura',
+        'precio_remojo',
+        'precio_lavado',
+        'precio_desmanche',
+        'precio_planchado',
+        'requiere_plancha'
+      ];
+      const ejemplo = [
+        'Toalla Blanca',
+        'Toalla hotelera',
+        '10',
+        '12',
+        '15',
+        '8',
+        '8',
+        '10',
+        '12',
+        '6',
+        '1'
+      ];
+      const csv = `${headers.join(',')}\n${ejemplo.join(',')}\n`;
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'plantilla_prendas.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showSuccess('Plantilla descargada');
+    }
+
+    function abrirImportacionPrendas() {
+      const input = document.getElementById('archivoImportacionPrendas');
+      if (!input) return;
+      input.value = '';
+      input.click();
+    }
+
+    async function importarPrendasDesdeArchivo(event) {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+
+      const text = await file.text();
+      const lines = text
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+      if (lines.length < 2) {
+        showWarning('El archivo no tiene datos para importar');
+        return;
+      }
+
+      const detectarSeparador = (line) => {
+        const candidatos = [',', ';', '\t', '|'];
+        let mejor = ',';
+        let maxCols = 1;
+        candidatos.forEach((sep) => {
+          const cols = line.split(sep).length;
+          if (cols > maxCols) {
+            maxCols = cols;
+            mejor = sep;
+          }
+        });
+        return mejor;
+      };
+
+      const separador = detectarSeparador(lines[0]);
+      const headers = lines[0].split(separador).map((h) => h.trim());
+
+      if (headers.length <= 1) {
+        showError('No detecte columnas en el archivo. Guarda el archivo como CSV, separado por columnas.');
+        return;
+      }
+
+      const prendas = lines.slice(1).map((line) => {
+        const values = line.split(separador).map((v) => v.trim());
+        const row = {};
+        headers.forEach((h, i) => { row[h] = values[i] || ''; });
+        return row;
+      });
+
+      const res = await fetch(`${API}/prendas/importar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-access-token': token },
+        body: JSON.stringify({ prendas })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showError(data.message || 'Error al importar prendas');
+        return;
+      }
+
+      showSuccess(`Importacion completada. Creadas: ${data.creadas}, Actualizadas: ${data.actualizadas}, Errores: ${data.errores}`);
+      loadPrendas();
+    }
+
     async function loadTrabajadores() {
       const res = await fetch(`${API}/trabajadores`, { headers: { 'x-access-token': token } });
       const data = await res.json();
       document.getElementById('tablaTrabajadores').innerHTML = `
         <thead><tr><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Factura</th><th>Tareas Activas</th><th>Acción</th></tr></thead>
-        <tbody>${data.map(t => `<tr><td>${t.nombre}</td><td>${t.cedula || '-'}</td><td>${t.telefono || '-'}</td><td>${t.factura ? 'Si' : 'No'}</td><td>${t.tareas_activas}</td><td style="white-space:nowrap;"><button class="btn btn-danger btn-table" title="Eliminar" onclick="eliminarTrabajador(${t.id})"><span class="mi">delete</span></button></td></tr>`).join('')}</tbody>
+        <tbody>${data.map(t => `<tr><td>${t.nombre}</td><td>${t.cedula || '-'}</td><td>${t.telefono || '-'}</td><td>${t.factura ? 'Si' : 'No'}</td><td>${t.tareas_activas}</td><td style="white-space:nowrap;"><button class="btn btn-primary btn-table" title="Editar" onclick="editarTrabajador(${t.id})"><span class="mi">edit</span></button><button class="btn btn-danger btn-table" title="Eliminar" onclick="eliminarTrabajador(${t.id})"><span class="mi">delete</span></button></td></tr>`).join('')}</tbody>
       `;
     }
 
@@ -4579,7 +5195,7 @@ async function enviarLavanderia_externa() {
           <td>${t.cedula || '-'}</td>
           <td>${t.telefono || '-'}</td>
           <td style="white-space:nowrap;">
-            <button class="btn btn-secondary btn-table" title="Editar" onclick="editarTrabajadorInterno(${t.id})"><span class="mi">edit</span></button>
+            <button class="btn btn-primary btn-table" title="Editar" onclick="editarTrabajadorInterno(${t.id})"><span class="mi">edit</span></button>
             <button class="btn btn-danger btn-table" title="Eliminar" onclick="eliminarTrabajadorInterno(${t.id})"><span class="mi">delete</span></button>
           </td>
         </tr>`).join('')}</tbody>
@@ -4632,7 +5248,7 @@ async function enviarLavanderia_externa() {
     }
 
     async function eliminarTrabajadorInterno(id) {
-      if (!confirm('¿Eliminar este trabajador interno?')) return;
+      if (!await confirmDialog('¿Eliminar este trabajador interno?', 'Eliminar trabajador interno')) return;
       const res = await fetch(`${API}/trabajadores-internos/${id}`, {
         method: 'DELETE',
         headers: { 'x-access-token': token }
@@ -4746,6 +5362,7 @@ async function enviarLavanderia_externa() {
       const departamentoId = document.getElementById('reporteDepartamento').value;
       const estadoPedido = document.getElementById('reporteEstadoPedido').value;
       const numeroPedido = document.getElementById('reporteNumeroPedido').value;
+      const procesoTarea = document.getElementById('reporteProcesoTarea').value;
       
       // Construir query params
       let params = [];
@@ -4755,6 +5372,7 @@ async function enviarLavanderia_externa() {
       if ((tipo === 'pedidos' || tipo === 'pedidos-resumen') && departamentoId) params.push(`departamento_id=${departamentoId}`);
       if (tipo === 'pedidos' && estadoPedido) params.push(`estado=${estadoPedido}`);
       if (tipo === 'pedidos' && numeroPedido) params.push(`pedido_id=${numeroPedido}`);
+      if (tipo === 'tareas-completadas' && procesoTarea) params.push(`proceso=${procesoTarea}`);
       const queryString = params.length > 0 ? '?' + params.join('&') : '';
       const reportLogo = localStorage.getItem('print_logo_base64');
       const reportLogoHtml = reportLogo
@@ -4968,13 +5586,11 @@ async function enviarLavanderia_externa() {
       document.getElementById('prendaStockInicial').value = '0';
       document.getElementById('prendaStockGroup').style.display = 'block';
       // Precios factura
-      document.getElementById('prendaSucioFactura').value = '0';
       document.getElementById('prendaRemojoFactura').value = '0';
       document.getElementById('prendaLavadoFactura').value = '0';
       document.getElementById('prendaDesmancheFactura').value = '0';
       document.getElementById('prendaPlanchadoFactura').value = '0';
       // Precios sin factura
-      document.getElementById('prendaSucio').value = '0';
       document.getElementById('prendaRemojo').value = '0';
       document.getElementById('prendaLavado').value = '0';
       document.getElementById('prendaDesmanche').value = '0';
@@ -5006,13 +5622,11 @@ async function enviarLavanderia_externa() {
         document.getElementById('prendaNombre').value = prenda.nombre || '';
         document.getElementById('prendaDescripcion').value = prenda.descripcion || '';
         // Precios factura (si existen)
-        document.getElementById('prendaSucioFactura').value = prenda.precio_sucio_factura || '0';
         document.getElementById('prendaRemojoFactura').value = prenda.precio_remojo_factura || '0';
         document.getElementById('prendaLavadoFactura').value = prenda.precio_lavado_factura || '0';
         document.getElementById('prendaDesmancheFactura').value = prenda.precio_desmanche_factura || '0';
         document.getElementById('prendaPlanchadoFactura').value = prenda.precio_planchado_factura || '0';
         // Precios sin factura
-        document.getElementById('prendaSucio').value = prenda.precio_sucio || '0';
         document.getElementById('prendaRemojo').value = prenda.precio_remojo || '0';
         document.getElementById('prendaLavado').value = prenda.precio_lavado || '0';
         document.getElementById('prendaDesmanche').value = prenda.precio_desmanche || '0';
@@ -5034,13 +5648,13 @@ async function enviarLavanderia_externa() {
         nombre: document.getElementById('prendaNombre').value,
         descripcion: document.getElementById('prendaDescripcion').value,
         // Precios para trabajadores que FACTURAN
-        precio_sucio_factura: parseFloat(document.getElementById('prendaSucioFactura').value) || 0,
+        precio_sucio_factura: 0,
         precio_remojo_factura: parseFloat(document.getElementById('prendaRemojoFactura').value) || 0,
         precio_lavado_factura: parseFloat(document.getElementById('prendaLavadoFactura').value) || 0,
         precio_desmanche_factura: parseFloat(document.getElementById('prendaDesmancheFactura').value) || 0,
         precio_planchado_factura: parseFloat(document.getElementById('prendaPlanchadoFactura').value) || 0,
         // Precios para trabajadores que NO FACTURAN
-        precio_sucio: parseFloat(document.getElementById('prendaSucio').value) || 0,
+        precio_sucio: 0,
         precio_remojo: parseFloat(document.getElementById('prendaRemojo').value) || 0,
         precio_lavado: parseFloat(document.getElementById('prendaLavado').value) || 0,
         precio_desmanche: parseFloat(document.getElementById('prendaDesmanche').value) || 0,
@@ -5112,7 +5726,16 @@ async function enviarLavanderia_externa() {
       }
     }
 
+    let editandoTrabajadorId = null;
+
     function showTrabajadorModal() {
+      editandoTrabajadorId = null;
+      document.getElementById('modalTrabajadorTitulo').textContent = 'Nuevo Trabajador';
+      document.getElementById('btnGuardarTrabajador').innerHTML = 'Guardar Trabajador';
+      document.getElementById('trabajadorNombre').value = '';
+      document.getElementById('trabajadorCedula').value = '';
+      document.getElementById('trabajadorTelefono').value = '';
+      document.getElementById('trabajadorFactura').checked = false;
       document.getElementById('modalTrabajador').classList.add('show');
     }
     function closeTrabajadorModal() {
@@ -5129,18 +5752,40 @@ async function enviarLavanderia_externa() {
         telefono: document.getElementById('trabajadorTelefono').value,
         factura: document.getElementById('trabajadorFactura').checked
       };
-      const res = await fetch(`${API}/trabajadores`, {
-        method: 'POST',
+      const url = editandoTrabajadorId ? `${API}/trabajadores/${editandoTrabajadorId}` : `${API}/trabajadores`;
+      const method = editandoTrabajadorId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json', 'x-access-token': token },
         body: JSON.stringify(data)
       });
       if (res.ok) {
-        showSuccess('Trabajador creado correctamente');
+        showSuccess(editandoTrabajadorId ? 'Trabajador actualizado correctamente' : 'Trabajador creado correctamente');
         closeTrabajadorModal();
         loadTrabajadores();
       } else {
-        showError('Error al crear trabajador');
+        showError(editandoTrabajadorId ? 'Error al actualizar trabajador' : 'Error al crear trabajador');
       }
+    }
+
+    async function editarTrabajador(id) {
+      const res = await fetch(`${API}/trabajadores`, { headers: { 'x-access-token': token } });
+      const data = await res.json();
+      const t = (data || []).find(x => Number(x.id) === Number(id));
+      if (!t) {
+        showError('No se encontro el trabajador');
+        return;
+      }
+
+      editandoTrabajadorId = id;
+      document.getElementById('modalTrabajadorTitulo').textContent = 'Editar Trabajador';
+      document.getElementById('btnGuardarTrabajador').innerHTML = '<span class="mi">save</span>Actualizar';
+      document.getElementById('trabajadorNombre').value = t.nombre || '';
+      document.getElementById('trabajadorCedula').value = t.cedula || '';
+      document.getElementById('trabajadorTelefono').value = t.telefono || '';
+      document.getElementById('trabajadorFactura').checked = !!t.factura;
+      document.getElementById('modalTrabajador').classList.add('show');
     }
 
     async function loadDepartamentos() {
@@ -5197,7 +5842,9 @@ async function enviarLavanderia_externa() {
       document.getElementById('usuarioDepartamento').value = '';
       document.getElementById('usuarioRol').value = 'solicitante';
       document.getElementById('usuarioActivo').checked = true;
+      document.getElementById('labelUsuarioPassword').textContent = 'Contrasena *';
       document.querySelector('#modalUsuario .modal-header h2').textContent = 'Nuevo Usuario';
+      cargarDepartamentosUsuario();
       document.getElementById('modalUsuario').classList.add('show');
     }
 
@@ -5206,6 +5853,9 @@ async function enviarLavanderia_externa() {
       const data = await res.json();
       document.getElementById('usuarioDepartamento').innerHTML = '<option value="">Sin asignar</option>' + 
         data.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+      if (!data.length) {
+        showWarning('No hay departamentos/eventos creados. Crea uno en Catalogo > Departamentos para poder asignarlo al usuario.');
+      }
     }
 
     function editarUsuario(id, username, nombre, departamento_id, rol, activo) {
@@ -5214,6 +5864,7 @@ async function enviarLavanderia_externa() {
         document.getElementById('usuarioUsername').value = username;
         document.getElementById('usuarioUsername').disabled = id !== null;
         document.getElementById('usuarioPassword').value = '';
+        document.getElementById('labelUsuarioPassword').textContent = 'Contrasena (dejar vacio para mantener)';
         document.getElementById('usuarioNombre').value = nombre;
         document.getElementById('usuarioDepartamento').value = departamento_id || '';
         document.getElementById('usuarioRol').value = rol;
@@ -5296,7 +5947,7 @@ async function enviarLavanderia_externa() {
     }
 
     async function eliminarUsuario(id) {
-      if (confirm('¿Eliminar este usuario?')) {
+      if (await confirmDialog('¿Eliminar este usuario?', 'Eliminar usuario')) {
         await fetch(`${API}/usuarios/${id}`, { method: 'DELETE', headers: { 'x-access-token': token } });
         showSuccess('Usuario eliminado');
         loadUsuarios();
@@ -5367,7 +6018,7 @@ async function enviarLavanderia_externa() {
     }
 
     async function eliminarDepartamento(id) {
-      if (confirm('¿Eliminar departamento?')) {
+      if (await confirmDialog('¿Eliminar departamento?', 'Eliminar departamento')) {
         await fetch(`${API}/departamentos/${id}`, { method: 'DELETE', headers: { 'x-access-token': token } });
         showSuccess('Departamento eliminado');
         loadDepartamentos();
@@ -5375,7 +6026,7 @@ async function enviarLavanderia_externa() {
     }
 
     async function eliminarPrenda(id) {
-      if (confirm('¿Eliminar prenda?')) {
+      if (await confirmDialog('¿Eliminar prenda?', 'Eliminar prenda')) {
         await fetch(`${API}/prendas/${id}`, { method: 'DELETE', headers: { 'x-access-token': token } });
         showSuccess('Prenda eliminada');
         loadPrendas();
@@ -5383,7 +6034,7 @@ async function enviarLavanderia_externa() {
     }
 
     async function eliminarTrabajador(id) {
-      if (confirm('¿Eliminar trabajador?')) {
+      if (await confirmDialog('¿Eliminar trabajador?', 'Eliminar trabajador')) {
         await fetch(`${API}/trabajadores/${id}`, { method: 'DELETE', headers: { 'x-access-token': token } });
         showSuccess('Trabajador eliminado');
         loadTrabajadores();
@@ -5396,11 +6047,11 @@ async function enviarLavanderia_externa() {
     <div class="modal-content">
       <div class="modal-header">
         <h2>Nuevo Usuario</h2>
-        <button class="modal-close" onclick="closeUsuarioModal()">×</button>
+        <button class="modal-close" onclick="closeUsuarioModal()">-</button>
       </div>
       <div class="modal-body">
         <div class="form-group"><label>Nombre de Usuario *</label><input type="text" id="usuarioUsername" class="form-control" placeholder="Username para login"></div>
-        <div class="form-group"><label>Contraseña ${editandoUsuarioId ? '(dejar vacío para mantener)' : '*'}</label><input type="password" id="usuarioPassword" class="form-control" placeholder="Contraseña"></div>
+        <div class="form-group"><label id="labelUsuarioPassword">Contraseña *</label><input type="password" id="usuarioPassword" class="form-control" placeholder="Contraseña"></div>
         <div class="form-group"><label>Nombre Completo *</label><input type="text" id="usuarioNombre" class="form-control" placeholder="Nombre completo"></div>
         <div class="form-group">
           <label>Departamento</label>
@@ -5413,6 +6064,7 @@ async function enviarLavanderia_externa() {
           <select id="usuarioRol" class="form-control">
             <option value="admin">Administrador</option>
             <option value="encargado">Encargado</option>
+            <option value="reportes">Reportes</option>
             <option value="trabajador">Trabajador</option>
             <option value="solicitante">Solicitante</option>
           </select>
@@ -5421,7 +6073,7 @@ async function enviarLavanderia_externa() {
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeUsuarioModal()"><span class="mi">close</span>Cancelar</button>
-        <button class="btn btn-success" onclick="guardarUsuario()">💾 Guardar Usuario</button>
+        <button class="btn btn-success" onclick="guardarUsuario()"><span class="mi">save</span>Guardar Usuario</button>
       </div>
     </div>
   </div>
@@ -5430,7 +6082,7 @@ async function enviarLavanderia_externa() {
     <div class="modal-content">
       <div class="modal-header">
         <h2>Nueva Prenda</h2>
-        <button class="modal-close" onclick="closePrendaModal()">×</button>
+        <button class="modal-close" onclick="closePrendaModal()">-</button>
       </div>
       <div class="modal-body" style="max-height:70vh; overflow-y:auto; padding:15px;">
         <div class="form-group"><label>Nombre *</label><input type="text" id="prendaNombre" class="form-control" placeholder="Nombre de la prenda"></div>
@@ -5445,7 +6097,6 @@ async function enviarLavanderia_externa() {
         <div style="background:#e8f5e9; padding:12px; border-radius:6px; margin:10px 0; border:2px solid #27ae60;">
           <label style="color:#27ae60; font-weight:600;"><span class="mi">payments</span>Precios para trabajadores que FACTURAN</label>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="form-group"><label>Sucio (Q)</label><input type="number" id="prendaSucioFactura" class="form-control" value="0" step="0.01"></div>
             <div class="form-group"><label>Remojo (Q)</label><input type="number" id="prendaRemojoFactura" class="form-control" value="0" step="0.01"></div>
             <div class="form-group"><label>Lavado (Q)</label><input type="number" id="prendaLavadoFactura" class="form-control" value="0" step="0.01"></div>
             <div class="form-group"><label>Desmanche (Q)</label><input type="number" id="prendaDesmancheFactura" class="form-control" value="0" step="0.01"></div>
@@ -5457,7 +6108,6 @@ async function enviarLavanderia_externa() {
         <div style="background:#fff3e0; padding:12px; border-radius:6px; margin:10px 0; border:2px solid #f39c12;">
           <label style="color:#f39c12; font-weight:600;"><span class="mi">account_balance_wallet</span>Precios para trabajadores que NO FACTURAN</label>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="form-group"><label>Sucio (Q)</label><input type="number" id="prendaSucio" class="form-control" value="0" step="0.01"></div>
             <div class="form-group"><label>Remojo (Q)</label><input type="number" id="prendaRemojo" class="form-control" value="0" step="0.01"></div>
             <div class="form-group"><label>Lavado (Q)</label><input type="number" id="prendaLavado" class="form-control" value="0" step="0.01"></div>
             <div class="form-group"><label>Desmanche (Q)</label><input type="number" id="prendaDesmanche" class="form-control" value="0" step="0.01"></div>
@@ -5469,7 +6119,7 @@ async function enviarLavanderia_externa() {
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closePrendaModal()"><span class="mi">close</span>Cancelar</button>
-        <button class="btn btn-success" onclick="guardarPrenda()">💾 Guardar Prenda</button>
+        <button class="btn btn-success" onclick="guardarPrenda()"><span class="mi">save</span>Guardar Prenda</button>
       </div>
     </div>
   </div>
@@ -5477,8 +6127,8 @@ async function enviarLavanderia_externa() {
   <div id="modalTrabajador" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Nuevo Trabajador</h2>
-        <button class="modal-close" onclick="closeTrabajadorModal()">×</button>
+        <h2 id="modalTrabajadorTitulo">Nuevo Trabajador</h2>
+        <button class="modal-close" onclick="closeTrabajadorModal()">-</button>
       </div>
       <div class="modal-body">
         <div class="form-group"><label>Nombre *</label><input type="text" id="trabajadorNombre" class="form-control" placeholder="Nombre completo"></div>
@@ -5488,7 +6138,7 @@ async function enviarLavanderia_externa() {
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeTrabajadorModal()"><span class="mi">close</span>Cancelar</button>
-        <button class="btn btn-success" onclick="guardarTrabajador()">💾 Guardar Trabajador</button>
+        <button id="btnGuardarTrabajador" class="btn btn-success" onclick="guardarTrabajador()"><span class="mi">save</span>Guardar Trabajador</button>
       </div>
     </div>
   </div>
@@ -5497,7 +6147,7 @@ async function enviarLavanderia_externa() {
     <div class="modal-content">
       <div class="modal-header">
         <h2>Nuevo Trabajador Interno</h2>
-        <button class="modal-close" onclick="closeTrabajadorInternoModal()">×</button>
+        <button class="modal-close" onclick="closeTrabajadorInternoModal()">-</button>
       </div>
       <div class="modal-body">
         <div class="form-group"><label>Nombre *</label><input type="text" id="trabajadorInternoNombre" class="form-control" placeholder="Nombre completo"></div>
@@ -5515,7 +6165,7 @@ async function enviarLavanderia_externa() {
     <div class="modal-content">
       <div class="modal-header">
         <h2>Nuevo Departamento</h2>
-        <button class="modal-close" onclick="closeDepartamentoModal()">×</button>
+        <button class="modal-close" onclick="closeDepartamentoModal()">-</button>
       </div>
       <div class="modal-body">
         <div class="form-group"><label>Nombre *</label><input type="text" id="departamentoNombre" class="form-control" placeholder="Nombre del departamento"></div>
@@ -5523,7 +6173,7 @@ async function enviarLavanderia_externa() {
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeDepartamentoModal()"><span class="mi">close</span>Cancelar</button>
-        <button class="btn btn-success" onclick="guardarDepartamento()">💾 Guardar Departamento</button>
+        <button class="btn btn-success" onclick="guardarDepartamento()"><span class="mi">save</span>Guardar Departamento</button>
       </div>
     </div>
   </div>
@@ -5532,13 +6182,100 @@ async function enviarLavanderia_externa() {
     .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center; }
     .modal.show { display:flex; }
     .modal-content { background:white; border-radius:12px; width:90%; max-width:500px; max-height:85vh; box-shadow:0 10px 40px rgba(0,0,0,0.2); overflow:hidden; display:flex; flex-direction:column; }
+    .modal-content-xl { max-width:980px; }
     .modal-header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #ecf0f1; flex-shrink:0; }
     .modal-header h2 { margin:0; color:#2c3e50; font-size:18px; }
     .modal-close { background:none; border:none; font-size:28px; color:#95a5a6; cursor:pointer; width:auto; padding:0; }
     .modal-close:hover { color:#e74c3c; }
     .modal-body { padding:20px; }
     .modal-footer { display:flex; gap:10px; justify-content:flex-end; padding:15px 20px; border-top:1px solid #ecf0f1; background:#f8f9fa; flex-shrink:0; }
+
+    @media (max-width: 1024px) {
+      .container { padding: 14px; }
+      .content { padding: 14px; margin-top: 12px; }
+      #dashboard > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+      #pedidos > div[style*="grid-template-columns: 1fr 350px"] { grid-template-columns: 1fr !important; }
+      #externa > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+      #reportes .tabs { flex-wrap: wrap; }
+    }
+
+    @media (max-width: 768px) {
+      .premium-nav {
+        height: auto;
+        min-height: 56px;
+        padding: 8px 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+        overflow: visible;
+      }
+      .nav-left, .nav-right { width: 100%; }
+      .nav-left { gap: 10px; flex-wrap: wrap; }
+      .nav-links { width: 100%; overflow: visible; padding-bottom: 4px; position: relative; z-index: 12060; }
+      .hList { position: relative; z-index: 12061; }
+      .menu { position: relative; z-index: 12062; }
+      .nav-right { justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+      .nav-time { order: 1; width: 100%; min-width: 0; font-size: 11px; padding: 6px 10px; }
+      .user-info { order: 2; flex: 1; min-width: 220px; padding: 8px 12px 8px 8px; gap: 10px; }
+      .user-avatar { width: 40px; height: 40px; font-size: 15px; }
+      .user-details { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+      .user-name { font-size: 14px; line-height: 1.2; }
+      .user-dept { font-size: 12px; line-height: 1.2; color: rgba(255,255,255,0.75); }
+      .user-name, .user-dept { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .logout-btn { order: 3; width: 42px; height: 42px; font-size: 19px; flex-shrink: 0; }
+
+      .hList { display: block; width: 100%; }
+      .hList > li { float: none; width: 100%; }
+      .menu { display: block; width: 100%; }
+      .menu-title {
+        width: 100%;
+        height: auto;
+        min-height: 40px;
+        padding: 10px 12px;
+        text-align: left;
+        border-radius: 8px;
+      }
+      .menu-title:before,
+      .menu-title:after,
+      .menu-dropdown:after { display: none; }
+      .menu-dropdown {
+        position: static;
+        width: 100%;
+        border-radius: 0 0 8px 8px;
+        margin-top: 2px;
+      }
+
+      .card { padding: 14px; margin: 12px 0; }
+      .card-header h3 { font-size: 16px; }
+      .stats { grid-template-columns: 1fr; gap: 12px; }
+      .tabs { gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+      .tab { padding: 10px 14px; font-size: 12px; white-space: nowrap; }
+
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      th, td { padding: 8px; font-size: 12px; white-space: nowrap; }
+
+      #procesos > div[style*="gap:20px"] { gap: 10px !important; }
+      .proceso-card { width: 44% !important; min-width: 145px; padding: 16px 10px !important; }
+
+      #modalEntrega .modal-content-xl { max-width: 96vw; }
+      #tablaEntregaPrendas { max-height: 52vh !important; }
+
+      #reportes .card > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+      #prendas > .form-control, #usuarios #filtroRolUsuario { max-width: 100% !important; margin-left: 0 !important; margin-top: 8px; }
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 10px; }
+      .content { padding: 10px; }
+      .btn, button { font-size: 14px; }
+      .proceso-card { width: 100% !important; }
+      #dashboard h2 { font-size: 22px; }
+      .user-info { min-width: 0; padding: 8px 10px 8px 6px; gap: 8px; }
+      .user-avatar { width: 38px; height: 38px; font-size: 14px; }
+      .user-name { font-size: 13px; }
+      .user-dept { font-size: 11px; }
+    }
   </style>
 </body>
 </html>
+
 

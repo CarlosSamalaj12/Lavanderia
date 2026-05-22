@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { verifyToken, requireAdmin, requireEncargado } = require('../middleware/auth');
+const { verifyToken, requireEncargado } = require('../middleware/auth');
 
 router.get('/', verifyToken, (req, res) => {
   db.all(
@@ -17,7 +17,10 @@ router.get('/', verifyToken, (req, res) => {
   );
 });
 
-router.post('/', verifyToken, requireAdmin, (req, res) => {
+router.post('/', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede crear trabajadores internos' });
+  }
   const { nombre, cedula, telefono } = req.body;
   if (!nombre || !String(nombre).trim()) {
     return res.status(400).json({ message: 'El nombre es requerido' });
@@ -33,7 +36,10 @@ router.post('/', verifyToken, requireAdmin, (req, res) => {
   );
 });
 
-router.put('/:id', verifyToken, requireAdmin, (req, res) => {
+router.put('/:id', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede editar trabajadores internos' });
+  }
   const { id } = req.params;
   const { nombre, cedula, telefono, activo } = req.body;
 
@@ -53,7 +59,10 @@ router.put('/:id', verifyToken, requireAdmin, (req, res) => {
   );
 });
 
-router.delete('/:id', verifyToken, requireAdmin, (req, res) => {
+router.delete('/:id', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede eliminar trabajadores internos' });
+  }
   const { id } = req.params;
   db.run('UPDATE trabajadores SET activo = 0 WHERE id = ? AND es_interno = 1', [id], function(err) {
     if (err) return res.status(500).json({ error: err.message });

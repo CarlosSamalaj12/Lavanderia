@@ -20,7 +20,33 @@ const { notFoundHandler, errorHandler } = require('./middleware/error-handler');
 
 const app = express();
 
-app.use(cors());
+const parseAllowedOrigins = () => {
+  const raw = process.env.ALLOWED_ORIGINS || '';
+  return raw.split(',').map((origin) => origin.trim()).filter(Boolean);
+};
+
+const allowedOrigins = parseAllowedOrigins();
+const allowAllOrigins = allowedOrigins.length === 0;
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    if (allowAllOrigins || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error('Origin no permitido por CORS.'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
@@ -47,10 +73,19 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Sistema de Lavandería API', version: '1.0.0' });
 });
 
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'lavanderia-backend' });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', service: 'lavanderia-api' });
+});
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  console.log(`Servidor corriendo en http://${HOST}:${PORT}`);
 });

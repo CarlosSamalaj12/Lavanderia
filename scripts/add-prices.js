@@ -4,7 +4,6 @@ const dbPath = './lavanderia.db';
 const dbConn = new db.Database(dbPath);
 
 const columns = [
-  'precio_sucio_factura REAL DEFAULT 0',
   'precio_remojo_factura REAL DEFAULT 0',
   'precio_lavado_factura REAL DEFAULT 0',
   'precio_desmanche_factura REAL DEFAULT 0',

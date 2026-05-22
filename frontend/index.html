@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Lavanderia</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <div class="laundry-bubbles" aria-hidden="true">
+      <span class="bubble bubble-1"></span>
+      <span class="bubble bubble-2"></span>
+      <span class="bubble bubble-3"></span>
+      <span class="bubble bubble-4"></span>
+      <span class="bubble bubble-5"></span>
+      <span class="bubble bubble-6"></span>
+      <span class="bubble bubble-7"></span>
+      <span class="bubble bubble-8"></span>
+      <span class="bubble bubble-9"></span>
+      <span class="bubble bubble-10"></span>
+    </div>
+
+    <header class="topbar">
+      <div class="brand-mark">
+        <div class="logo-frame">
+          <img src="assets/logo-jardines-del-lago.png" alt="Logo Jardines del Lago" class="brand-logo">
+        </div>
+      </div>
+      <div class="hero-copy">
+        <p class="eyebrow">Jardines del Lago</p>
+        <h1>Opera prendas, tareas, pedidos y stock sin mezclar procesos</h1>
+        <p class="hero-text">Cada modulo tiene su propio espacio para que el trabajo diario sea claro, rapido y facil de revisar, con una identidad visual pensada para lavanderia.</p>
+      </div>
+      <div class="topbar-actions">
+        <label class="inline-field">
+          <span>Usuario activo</span>
+          <select id="usuario-activo"></select>
+        </label>
+        <button id="btn-recargar" class="btn ghost" type="button">Recargar</button>
+      </div>
+    </header>
+
+    <nav class="section-tabs">
+      <button class="tab active" data-tab="resumen" type="button">Resumen</button>
+      <button class="tab" data-tab="operacion" type="button">Operacion</button>
+      <button class="tab" data-tab="catalogos" type="button">Catalogos</button>
+      <button class="tab" data-tab="pedidos" type="button">Pedidos</button>
+      <button class="tab" data-tab="reportes" type="button">Reportes</button>
+    </nav>
+
+    <main>
+      <section id="resumen" class="panel active">
+        <div id="cards-estados" class="card-grid"></div>
+        <div class="dashboard-grid">
+          <article class="card">
+            <div class="section-header">
+              <div>
+                <p class="section-kicker">Rendimiento</p>
+                <h2>Trabajadores con mejor rendimiento</h2>
+              </div>
+            </div>
+            <div id="tabla-top-trabajadores"></div>
+          </article>
+
+          <article class="card">
+            <div class="section-header">
+              <div>
+                <p class="section-kicker">Estado general</p>
+                <h2>Resumen rapido</h2>
+              </div>
+            </div>
+            <div class="stats-stack">
+              <div class="stat-line"><span>Pedidos pendientes</span><strong id="dato-pedidos-pendientes">0</strong></div>
+              <div class="stat-line"><span>Stock listo para despacho</span><strong id="dato-stock-despacho">0</strong></div>
+              <div class="stat-line"><span>Codigo admin demo</span><strong>1234</strong></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="section-header">
+            <div>
+              <p class="section-kicker">Inventario</p>
+              <h2>Inventario actual por estado</h2>
+            </div>
+          </div>
+          <div id="tabla-inventario-resumen"></div>
+        </article>
+      </section>
+
+        <section id="operacion" class="panel">
+          <div class="workspace-shell">
+            <aside class="workspace-sidebar">
+              <div class="workspace-sidebar-head">
+                <span class="sidebar-mini-title">Menu</span>
+                <button class="small-btn sidebar-close" type="button" data-action="toggle-sidebar" data-panel="operacion" aria-label="Cerrar menu">×</button>
+              </div>
+              <div class="sidebar-deco sidebar-deco-wash" aria-hidden="true"></div>
+              <p class="section-kicker">Operacion diaria</p>
+              <h2>Procesos de lavanderia</h2>
+            <div class="module-nav">
+              <button class="module-tab active" data-subgroup="operacion" data-subpanel="operacion-ingreso" type="button">Ingreso</button>
+              <button class="module-tab" data-subgroup="operacion" data-subpanel="operacion-asignacion" type="button">Asignar tareas</button>
+              <button class="module-tab" data-subgroup="operacion" data-subpanel="operacion-movimientos" type="button">Movimientos</button>
+                <button class="module-tab" data-subgroup="operacion" data-subpanel="operacion-historial" type="button">Control de tareas</button>
+            </div>
+            </aside>
+
+            <div class="workspace-content">
+              <div class="workspace-toolbar">
+                <button class="small-btn primary sidebar-toggle" type="button" data-action="toggle-sidebar" data-panel="operacion"><span class="sidebar-toggle-icon">☰</span><span class="sidebar-toggle-label">Mostrar menu</span></button>
+              </div>
+              <section id="operacion-ingreso" class="subpanel active">
+                <article class="card module-card">
+                <div class="section-header">
+                  <div>
+                    <p class="section-kicker">Entrada</p>
+                    <h2>Ingreso de prendas al sistema</h2>
+                  </div>
+                  <p class="hero-text">Registra ropa nueva o devoluciones internas al estado que corresponda.</p>
+                </div>
+                <form id="form-ingreso" class="stack-form form-grid two">
+                  <select id="ingreso-prenda" required></select>
+                  <select id="ingreso-estado" required></select>
+                  <input id="ingreso-cantidad" type="number" min="1" value="1" required>
+                  <textarea id="ingreso-detalle" placeholder="Observacion del ingreso"></textarea>
+                  <button class="btn primary form-span" type="submit">Registrar ingreso</button>
+                </form>
+              </article>
+            </section>
+
+            <section id="operacion-asignacion" class="subpanel">
+              <article class="card module-card">
+                <div class="section-header">
+                  <div>
+                    <p class="section-kicker">Asignacion</p>
+                    <h2>Asignacion manual de tareas</h2>
+                  </div>
+                  <p class="hero-text">Busca prendas a la izquierda y arma un carrito de tareas a la derecha antes de confirmar.</p>
+                </div>
+                <div class="assignment-board">
+                  <div class="assignment-picker">
+                    <form id="form-asignacion" class="stack-form">
+                      <div class="info-box">
+                        Cada tarea se asigna por separado. Puedes poner una persona en remojo, otra en lavado y otra en tendido. El carrito guarda cada fila con su propio responsable.
+                      </div>
+                      <div class="finder-shell">
+                        <label class="finder-search">
+                          <span class="finder-icon" aria-hidden="true">⌕</span>
+                          <input id="asignacion-prenda-buscar" type="text" placeholder="Buscar prenda para asignar">
+                        </label>
+                        <div class="finder-meta">
+                          <small id="asignacion-resultados-meta">Escribe para encontrar una prenda por nombre o SKU.</small>
+                        </div>
+                        <div id="asignacion-resultados" class="assignment-results"></div>
+                      </div>
+                      <select id="asignacion-prenda" required></select>
+                      <input id="asignacion-estado-origen" type="hidden">
+                      <input id="asignacion-estado-destino" type="hidden">
+                      <div>
+                        <p class="section-kicker">Tarea a asignar</p>
+                        <div id="asignacion-tareas" class="task-grid"></div>
+                      </div>
+                      <div id="asignacion-ruta-info" class="info-box muted">Selecciona una tarea para ver de donde se descontara la prenda y a donde se movera.</div>
+                      <div>
+                        <p class="section-kicker">Responsable de esta tarea</p>
+                        <select id="asignacion-trabajador"></select>
+                      </div>
+                      <input id="asignacion-cantidad" type="number" min="1" value="1" required>
+                      <div id="asignacion-stock-info" class="info-box muted">Selecciona prenda y estado origen para ver stock disponible.</div>
+                      <textarea id="asignacion-observacion" placeholder="Observaciones"></textarea>
+                      <div class="inline-actions">
+                        <button class="btn ghost" id="btn-agregar-asignacion" type="button">Agregar al carrito</button>
+                        <button class="btn primary" type="submit">Asignar tareas</button>
+                      </div>
+                    </form>
+                  </div>
+                    <aside class="assignment-cart">
+                      <div class="card-head">
+                        <h3>Carrito de tareas</h3>
+                        <small id="asignacion-cart-resumen" class="muted">0 tareas agregadas, cada una con su propio responsable</small>
+                      </div>
+                    <div id="tabla-borrador-asignaciones"></div>
+                  </aside>
+                </div>
+              </article>
+            </section>
+
+            <section id="operacion-movimientos" class="subpanel">
+              <div class="stack-sections">
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Stock en proceso</p>
+                      <h2>Avance rapido e inventario operativo</h2>
+                    </div>
+                    <p class="hero-text">Mueve prendas al siguiente estado o desvialas a reproceso y desmanche.</p>
+                  </div>
+                  <div id="tabla-operacion-inventario"></div>
+                </article>
+
+                <div class="feature-grid">
+                  <article class="card module-card">
+                    <div class="section-header">
+                      <div>
+                        <p class="section-kicker">Devoluciones</p>
+                        <h2>Devolucion desde bodega</h2>
+                      </div>
+                    </div>
+                    <form id="form-devolucion-bodega" class="stack-form">
+                      <select id="devolucion-bodega" required></select>
+                      <select id="devolucion-prenda" required></select>
+                      <select id="devolucion-estado" required></select>
+                      <input id="devolucion-cantidad" type="number" min="1" value="1" required>
+                      <textarea id="devolucion-detalle" placeholder="Detalle de devolucion"></textarea>
+                      <button class="btn primary" type="submit">Registrar devolucion</button>
+                    </form>
+                  </article>
+
+                  <article class="card module-card">
+                    <div class="section-header">
+                      <div>
+                        <p class="section-kicker">Soporte externo</p>
+                        <h2>Lavanderia externa</h2>
+                      </div>
+                    </div>
+                    <form id="form-externa-salida" class="stack-form split-form">
+                      <h3>Enviar a externa</h3>
+                      <select id="externa-bodega-salida" required></select>
+                      <select id="externa-prenda-salida" required></select>
+                      <select id="externa-estado-salida" required></select>
+                      <input id="externa-cantidad-salida" type="number" min="1" value="1" required>
+                      <button class="btn secondary" type="submit">Enviar</button>
+                    </form>
+
+                    <form id="form-externa-retorno" class="stack-form split-form">
+                      <h3>Retorno desde externa</h3>
+                      <select id="externa-bodega-retorno" required></select>
+                      <select id="externa-prenda-retorno" required></select>
+                      <select id="externa-estado-retorno" required></select>
+                      <input id="externa-cantidad-retorno" type="number" min="1" value="1" required>
+                      <button class="btn primary" type="submit">Registrar retorno</button>
+                    </form>
+                  </article>
+                </div>
+              </div>
+            </section>
+
+              <section id="operacion-historial" class="subpanel">
+                <div class="task-control-grid">
+                  <article class="card module-card wide-table-card">
+                    <div class="section-header">
+                      <div>
+                        <p class="section-kicker">Control</p>
+                        <h2>Centro de control de tareas asignadas</h2>
+                      </div>
+                      <p class="hero-text">Revisa tareas en una tabla grande, filtra rapido y abre cualquier fila para rectificar o transferir.</p>
+                    </div>
+                    <div class="form-grid four compact-filters">
+                      <input id="control-tareas-buscar" type="text" placeholder="Buscar por prenda, responsable o nota">
+                      <select id="control-tareas-trabajador"></select>
+                      <select id="control-tareas-estado"></select>
+                      <select id="control-tareas-revision">
+                        <option value="">Todos los cumplimientos</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="parcial">Parcial</option>
+                        <option value="cumplida">Cumplida</option>
+                      </select>
+                    </div>
+                    <div id="tabla-asignaciones"></div>
+                  </article>
+                </div>
+              </section>
+          </div>
+        </div>
+      </section>
+
+        <section id="catalogos" class="panel">
+          <div class="workspace-shell">
+            <aside class="workspace-sidebar">
+              <div class="workspace-sidebar-head">
+                <span class="sidebar-mini-title">Menu</span>
+                <button class="small-btn sidebar-close" type="button" data-action="toggle-sidebar" data-panel="catalogos" aria-label="Cerrar menu">×</button>
+              </div>
+              <div class="sidebar-deco sidebar-deco-tags" aria-hidden="true"></div>
+              <p class="section-kicker">Configuracion</p>
+              <h2>Catalogos del sistema</h2>
+            <div class="module-nav">
+              <button class="module-tab active" data-subgroup="catalogos" data-subpanel="catalogos-estructura" type="button">Areas y bodegas</button>
+              <button class="module-tab" data-subgroup="catalogos" data-subpanel="catalogos-estados" type="button">Estados</button>
+              <button class="module-tab" data-subgroup="catalogos" data-subpanel="catalogos-prendas" type="button">Prendas y precios</button>
+              <button class="module-tab" data-subgroup="catalogos" data-subpanel="catalogos-personal" type="button">Personal y usuarios</button>
+            </div>
+            </aside>
+
+            <div class="workspace-content">
+              <div class="workspace-toolbar">
+                <button class="small-btn primary sidebar-toggle" type="button" data-action="toggle-sidebar" data-panel="catalogos"><span class="sidebar-toggle-icon">☰</span><span class="sidebar-toggle-label">Mostrar menu</span></button>
+              </div>
+              <section id="catalogos-estructura" class="subpanel active">
+                <div class="feature-grid">
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Organizacion</p>
+                      <h2>Areas</h2>
+                    </div>
+                  </div>
+                  <form id="form-area" class="stack-form mini-form">
+                    <input id="area-nombre" type="text" placeholder="Nombre del area" required>
+                    <input id="area-descripcion" type="text" placeholder="Descripcion">
+                    <button class="btn primary" type="submit">Guardar area</button>
+                  </form>
+                  <div id="tabla-areas"></div>
+                </article>
+
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Despacho</p>
+                      <h2>Bodegas</h2>
+                    </div>
+                  </div>
+                  <form id="form-bodega" class="stack-form mini-form">
+                    <input id="bodega-nombre" type="text" placeholder="Nombre de bodega" required>
+                    <select id="bodega-tipo">
+                      <option value="principal">Principal</option>
+                      <option value="interna">Interna</option>
+                      <option value="externa">Externa</option>
+                    </select>
+                    <input id="bodega-descripcion" type="text" placeholder="Descripcion">
+                    <button class="btn primary" type="submit">Guardar bodega</button>
+                  </form>
+                  <div id="tabla-bodegas"></div>
+                </article>
+              </div>
+            </section>
+
+            <section id="catalogos-estados" class="subpanel">
+              <article class="card module-card">
+                <div class="section-header">
+                  <div>
+                    <p class="section-kicker">Flujo</p>
+                    <h2>Estados o tareas</h2>
+                  </div>
+                </div>
+                <form id="form-estado" class="stack-form form-grid two">
+                  <input id="estado-codigo" type="text" placeholder="Codigo interno" required>
+                  <input id="estado-nombre" type="text" placeholder="Nombre visible" required>
+                  <input id="estado-orden" type="number" min="1" placeholder="Orden" required>
+                  <input id="estado-color" type="text" placeholder="#1c6e61">
+                  <label class="checkbox-line"><input id="estado-cobra" type="checkbox"> Esta tarea se paga</label>
+                  <label class="checkbox-line"><input id="estado-final" type="checkbox"> Estado final</label>
+                  <input id="estado-descripcion" class="form-span" type="text" placeholder="Descripcion">
+                  <button class="btn primary form-span" type="submit">Guardar estado</button>
+                </form>
+                <div id="tabla-estados"></div>
+              </article>
+            </section>
+
+            <section id="catalogos-prendas" class="subpanel">
+              <article class="card module-card">
+                <div class="section-header">
+                  <div>
+                    <p class="section-kicker">Maestros</p>
+                    <h2>Prendas</h2>
+                  </div>
+                </div>
+                <form id="form-prenda" class="stack-form form-grid two">
+                  <input id="prenda-nombre" type="text" placeholder="Nombre de prenda" required>
+                  <input id="prenda-sku" type="text" placeholder="SKU">
+                  <select id="prenda-area"></select>
+                  <input id="prenda-descripcion" type="text" placeholder="Descripcion">
+                  <label class="checkbox-line form-span"><input id="prenda-no-planchar" type="checkbox"> No se plancha</label>
+                  <div class="form-span">
+                    <p class="section-kicker">Precios por proceso</p>
+                    <div class="info-box muted">
+                      Una misma prenda puede participar en varios procesos. Ejemplo: una toalla puede tener precio en remojo, lavado y tendido; una sabana puede tener remojo, lavado, tendido y planchado.
+                    </div>
+                    <div id="prenda-precios-builder"></div>
+                  </div>
+                  <button class="btn primary form-span" type="submit">Guardar prenda</button>
+                </form>
+                <div id="tabla-prendas"></div>
+              </article>
+
+              <article class="card module-card">
+                <div class="section-header">
+                  <div>
+                    <p class="section-kicker">Pagos</p>
+                    <h2>Precios por prenda y estado</h2>
+                  </div>
+                </div>
+                <div class="info-box muted">
+                  Cada prenda puede tener precios en todos los procesos que apliquen, no solo en uno.
+                </div>
+                <form id="form-precio" class="price-form form-grid four">
+                  <select id="precio-prenda" required></select>
+                  <select id="precio-estado" required></select>
+                  <input id="precio-factura" type="number" min="0" step="0.01" placeholder="Precio factura">
+                  <input id="precio-no-factura" type="number" min="0" step="0.01" placeholder="Precio no factura">
+                  <button class="btn secondary form-span" type="submit">Guardar precio</button>
+                </form>
+                <div id="tabla-precios"></div>
+              </article>
+            </section>
+
+            <section id="catalogos-personal" class="subpanel">
+              <div class="feature-grid">
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Ejecucion</p>
+                      <h2>Trabajadores</h2>
+                    </div>
+                  </div>
+                  <form id="form-trabajador" class="stack-form mini-form">
+                    <input id="trabajador-nombre" type="text" placeholder="Nombre" required>
+                    <input id="trabajador-telefono" type="text" placeholder="Telefono">
+                    <label class="checkbox-line"><input id="trabajador-factura" type="checkbox"> Factura</label>
+                    <input id="trabajador-observacion" type="text" placeholder="Observaciones">
+                    <button class="btn primary" type="submit">Guardar trabajador</button>
+                  </form>
+                  <div id="tabla-trabajadores"></div>
+                </article>
+
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Acceso</p>
+                      <h2>Usuarios</h2>
+                    </div>
+                  </div>
+                  <form id="form-usuario" class="stack-form mini-form">
+                    <input id="usuario-nombre" type="text" placeholder="Nombre" required>
+                    <input id="usuario-username" type="text" placeholder="Usuario" required>
+                    <input id="usuario-password" type="text" placeholder="Password" required>
+                    <select id="usuario-rol">
+                      <option value="admin">Admin</option>
+                      <option value="encargado">Encargado</option>
+                      <option value="solicitante">Solicitante</option>
+                    </select>
+                    <select id="usuario-bodega"></select>
+                    <input id="usuario-codigo" type="text" placeholder="Codigo de autorizacion">
+                    <button class="btn primary" type="submit">Guardar usuario</button>
+                  </form>
+                  <div id="tabla-usuarios"></div>
+                </article>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+        <section id="pedidos" class="panel">
+          <div class="workspace-shell">
+            <aside class="workspace-sidebar">
+              <div class="workspace-sidebar-head">
+                <span class="sidebar-mini-title">Menu</span>
+                <button class="small-btn sidebar-close" type="button" data-action="toggle-sidebar" data-panel="pedidos" aria-label="Cerrar menu">×</button>
+              </div>
+              <div class="sidebar-deco sidebar-deco-basket" aria-hidden="true"></div>
+              <p class="section-kicker">Atencion a bodegas</p>
+              <h2>Pedidos y despacho</h2>
+            <div class="module-nav">
+              <button class="module-tab active" data-subgroup="pedidos" data-subpanel="pedidos-crear" type="button">Crear pedido</button>
+              <button class="module-tab" data-subgroup="pedidos" data-subpanel="pedidos-listado" type="button">Listado</button>
+            </div>
+            </aside>
+
+            <div class="workspace-content">
+              <div class="workspace-toolbar">
+                <button class="small-btn primary sidebar-toggle" type="button" data-action="toggle-sidebar" data-panel="pedidos"><span class="sidebar-toggle-icon">☰</span><span class="sidebar-toggle-label">Mostrar menu</span></button>
+              </div>
+              <section id="pedidos-crear" class="subpanel active">
+                <article class="card module-card">
+                <div class="section-header">
+                  <div>
+                    <p class="section-kicker">Solicitud</p>
+                    <h2>Crear pedido</h2>
+                  </div>
+                </div>
+                  <form id="form-pedido" class="stack-form">
+                    <select id="pedido-usuario" required></select>
+                    <div class="form-grid two">
+                      <label class="picker-field">
+                        <span class="picker-label">Fecha solicitada</span>
+                        <div class="picker-shell">
+                          <input id="pedido-fecha" type="text" required placeholder="Selecciona fecha">
+                          <button class="picker-trigger" type="button" data-action="open-picker" data-target="pedido-fecha" aria-label="Abrir calendario">🗓</button>
+                        </div>
+                      </label>
+                      <label class="picker-field">
+                        <span class="picker-label">Horario</span>
+                        <div class="picker-shell">
+                          <input id="pedido-horario" type="text" required placeholder="Selecciona hora">
+                          <button class="picker-trigger" type="button" data-action="open-picker" data-target="pedido-horario" aria-label="Abrir horario">🕒</button>
+                        </div>
+                      </label>
+                    </div>
+                  <div class="finder-shell">
+                    <label class="finder-search">
+                      <span class="finder-icon" aria-hidden="true">⌕</span>
+                      <input id="pedido-item-buscar" type="text" placeholder="Buscar prenda para el pedido">
+                    </label>
+                    <div class="finder-meta">
+                      <small id="pedido-item-resultados-meta">Busca por nombre, SKU o descripcion.</small>
+                    </div>
+                    <div id="pedido-item-resultados" class="assignment-results"></div>
+                  </div>
+                  <div class="inline-builder">
+                    <select id="pedido-item-prenda"></select>
+                    <input id="pedido-item-cantidad" type="number" min="1" value="1">
+                    <button type="button" id="btn-agregar-item" class="btn ghost">Agregar item</button>
+                  </div>
+                  <div id="pedido-items" class="chip-list"></div>
+                  <textarea id="pedido-observaciones" placeholder="Observaciones"></textarea>
+                  <button class="btn primary" type="submit">Guardar pedido</button>
+                </form>
+              </article>
+            </section>
+
+            <section id="pedidos-listado" class="subpanel">
+              <article class="card module-card">
+                <div class="section-header">
+                  <div>
+                    <p class="section-kicker">Seguimiento</p>
+                    <h2>Pedidos registrados</h2>
+                  </div>
+                </div>
+                <div id="tabla-pedidos"></div>
+              </article>
+            </section>
+          </div>
+        </div>
+      </section>
+
+        <section id="reportes" class="panel">
+          <div class="workspace-shell">
+            <aside class="workspace-sidebar">
+              <div class="workspace-sidebar-head">
+                <span class="sidebar-mini-title">Menu</span>
+                <button class="small-btn sidebar-close" type="button" data-action="toggle-sidebar" data-panel="reportes" aria-label="Cerrar menu">×</button>
+              </div>
+              <div class="sidebar-deco sidebar-deco-report" aria-hidden="true"></div>
+              <p class="section-kicker">Analitica</p>
+              <h2>Reportes y control</h2>
+            <div class="module-nav">
+              <button class="module-tab active" data-subgroup="reportes" data-subpanel="reportes-operacion" type="button">Operacion</button>
+              <button class="module-tab" data-subgroup="reportes" data-subpanel="reportes-inventario" type="button">Inventario</button>
+              <button class="module-tab" data-subgroup="reportes" data-subpanel="reportes-rendimiento" type="button">Rendimiento</button>
+            </div>
+            </aside>
+
+            <div class="workspace-content">
+              <div class="workspace-toolbar">
+                <button class="small-btn primary sidebar-toggle" type="button" data-action="toggle-sidebar" data-panel="reportes"><span class="sidebar-toggle-icon">☰</span><span class="sidebar-toggle-label">Mostrar menu</span></button>
+              </div>
+              <section id="reportes-operacion" class="subpanel active">
+                <div class="feature-grid">
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Trazabilidad</p>
+                      <h2>Asignaciones por dia</h2>
+                    </div>
+                  </div>
+                  <div id="reporte-asignaciones-dia"></div>
+                </article>
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Pago</p>
+                      <h2>Tareas y pagos</h2>
+                    </div>
+                  </div>
+                  <div id="reporte-tareas"></div>
+                </article>
+                <article class="card module-card wide-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Autorizaciones</p>
+                      <h2>Reversiones</h2>
+                    </div>
+                  </div>
+                  <div id="reporte-reversiones"></div>
+                </article>
+              </div>
+            </section>
+
+            <section id="reportes-inventario" class="subpanel">
+              <div class="feature-grid">
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Estados</p>
+                      <h2>Prendas por estado</h2>
+                    </div>
+                  </div>
+                  <div id="reporte-prendas-estado"></div>
+                </article>
+                <article class="card module-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Existencias</p>
+                      <h2>Inventario</h2>
+                    </div>
+                  </div>
+                  <div id="reporte-inventario"></div>
+                </article>
+                <article class="card module-card wide-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Bodegas</p>
+                      <h2>Existencia por bodega</h2>
+                    </div>
+                  </div>
+                  <div id="reporte-bodega"></div>
+                </article>
+              </div>
+            </section>
+
+              <section id="reportes-rendimiento" class="subpanel">
+                <article class="card module-card performance-report-card">
+                  <div class="section-header">
+                    <div>
+                      <p class="section-kicker">Productividad</p>
+                      <h2>Rendimiento por persona y tarea</h2>
+                    </div>
+                    <p class="hero-text">Filtra por trabajador, tarea y rango de fechas. Arriba veras los totales y abajo el detalle completo para exportar.</p>
+                  </div>
+                  <div class="performance-filter-bar">
+                    <div class="form-grid four compact-filters performance-filters">
+                      <select id="reporte-rendimiento-trabajador"></select>
+                      <select id="reporte-rendimiento-tarea"></select>
+                      <label class="picker-field">
+                        <span class="picker-label">Desde</span>
+                        <div class="picker-shell">
+                          <input id="reporte-rendimiento-desde" type="text" placeholder="Fecha inicial">
+                          <button class="picker-trigger" type="button" data-action="open-picker" data-target="reporte-rendimiento-desde" aria-label="Abrir calendario desde">🗓</button>
+                        </div>
+                      </label>
+                      <label class="picker-field">
+                        <span class="picker-label">Hasta</span>
+                        <div class="picker-shell">
+                          <input id="reporte-rendimiento-hasta" type="text" placeholder="Fecha final">
+                          <button class="picker-trigger" type="button" data-action="open-picker" data-target="reporte-rendimiento-hasta" aria-label="Abrir calendario hasta">🗓</button>
+                        </div>
+                      </label>
+                    </div>
+                    <div class="performance-actions">
+                      <button class="btn ghost" id="btn-reporte-rendimiento-limpiar" type="button">Limpiar filtros</button>
+                      <button class="btn primary" id="btn-reporte-rendimiento-exportar" type="button">Exportar a Excel</button>
+                    </div>
+                  </div>
+                  <div class="performance-metrics">
+                    <div id="reporte-rendimiento-cards" class="card-grid performance-cards"></div>
+                  </div>
+                  <div class="performance-block">
+                    <div class="card-head">
+                      <div>
+                        <p class="section-kicker">Resumen</p>
+                        <h3>Consolidado por trabajador</h3>
+                      </div>
+                    </div>
+                    <div id="reporte-rendimiento-resumen"></div>
+                  </div>
+                  <div class="performance-block">
+                    <div class="card-head">
+                      <div>
+                        <p class="section-kicker">Detalle</p>
+                        <h3>Movimientos incluidos en el filtro</h3>
+                      </div>
+                    </div>
+                    <div id="reporte-rendimiento"></div>
+                  </div>
+                </article>
+              </section>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <div id="app-modal" class="app-modal hidden">
+    <div class="app-modal-card">
+      <div class="app-modal-head">
+        <h3 id="app-modal-title">Mensaje</h3>
+        <button id="app-modal-close" class="small-btn" type="button">Cerrar</button>
+      </div>
+      <p id="app-modal-message" class="muted"></p>
+      <input id="app-modal-input" class="hidden" type="text">
+      <div id="app-modal-actions" class="inline-actions"></div>
+    </div>
+  </div>
+
+  <div id="assignment-modal" class="app-modal hidden">
+    <div class="app-modal-card assignment-modal-card">
+      <div class="app-modal-head">
+        <h3>Detalle de tarea</h3>
+        <button id="assignment-modal-close" class="small-btn" type="button">Cerrar</button>
+      </div>
+      <form id="form-assignment-modal" class="stack-form">
+        <input id="assignment-modal-id" type="hidden">
+        <div id="assignment-modal-summary" class="info-box muted">Selecciona una tarea para verla en detalle.</div>
+        <div>
+          <p class="section-kicker">Responsable</p>
+          <select id="assignment-modal-trabajador"></select>
+        </div>
+        <div class="form-grid two">
+          <div>
+            <p class="section-kicker">Cumplimiento</p>
+            <select id="assignment-modal-revision">
+              <option value="pendiente">Pendiente</option>
+              <option value="parcial">Parcial</option>
+              <option value="cumplida">Cumplida</option>
+            </select>
+          </div>
+          <div>
+            <p class="section-kicker">Cantidad realizada</p>
+            <input id="assignment-modal-realizada" type="number" min="0" value="0">
+          </div>
+        </div>
+        <label class="checkbox-line"><input id="assignment-modal-revisada" type="checkbox"> OK, tarea chequeada y revisada</label>
+        <textarea id="assignment-modal-observaciones" placeholder="Observaciones de la rectificacion o transferencia"></textarea>
+        <input id="assignment-modal-codigo" type="password" placeholder="Codigo de autorizacion">
+        <div class="inline-actions">
+          <button class="btn ghost" id="assignment-modal-clear" type="button">Limpiar</button>
+          <button class="btn primary" type="submit">Guardar</button>
+          <button class="btn danger" id="assignment-modal-delete" type="button">Eliminar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { verifyToken, requireAdmin, requireEncargado } = require('../middleware/auth');
+const { verifyToken, requireEncargado } = require('../middleware/auth');
 
 router.get('/', verifyToken, (req, res) => {
   const { q } = req.query;
@@ -62,8 +62,31 @@ router.get('/stock/resumen', verifyToken, (req, res) => {
       proceso,
       SUM(cantidad) as cantidad
     FROM prendas_proceso
+    WHERE proceso != 'stock' OR departamento_actual IS NULL
     GROUP BY proceso
   `;
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+router.get('/stock/disponible-despacho', verifyToken, (req, res) => {
+  const sql = `
+    SELECT
+      p.id as prenda_id,
+      p.nombre as prenda,
+      COALESCE(SUM(pp.cantidad), 0) as cantidad
+    FROM prendas p
+    LEFT JOIN prendas_proceso pp
+      ON pp.prenda_id = p.id
+      AND pp.proceso = 'stock'
+      AND pp.departamento_actual IS NULL
+    WHERE p.activo = 1
+    GROUP BY p.id, p.nombre
+    ORDER BY p.nombre
+  `;
+
   db.all(sql, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
@@ -92,11 +115,14 @@ router.get('/:id/stock-trazabilidad', verifyToken, (req, res) => {
   });
 });
 
-router.post('/', verifyToken, requireAdmin, (req, res) => {
+router.post('/', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede crear prendas' });
+  }
   const {
     nombre, descripcion,
-    precio_sucio_factura, precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
-    precio_sucio, precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
+    precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
+    precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
     requiere_plancha
   } = req.body;
 
@@ -106,16 +132,16 @@ router.post('/', verifyToken, requireAdmin, (req, res) => {
 
   const sql = `
     INSERT INTO prendas (nombre, descripcion, 
-      precio_sucio_factura, precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
-      precio_sucio, precio_remojo, precio_lavado, precio_desmanche, precio_planchado, 
+      precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
+      precio_remojo, precio_lavado, precio_desmanche, precio_planchado, 
       requiere_plancha)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.run(sql, [
     nombre, descripcion || null,
-    precio_sucio_factura || 0, precio_remojo_factura || 0, precio_lavado_factura || 0, precio_desmanche_factura || 0, precio_planchado_factura || 0,
-    precio_sucio || 0, precio_remojo || 0, precio_lavado || 0, precio_desmanche || 0, precio_planchado || 0,
+    precio_remojo_factura || 0, precio_lavado_factura || 0, precio_desmanche_factura || 0, precio_planchado_factura || 0,
+    precio_remojo || 0, precio_lavado || 0, precio_desmanche || 0, precio_planchado || 0,
     requiere_plancha !== undefined ? requiere_plancha : 1
   ], function(err) {
     if (err) return res.status(500).json({ error: err.message });
@@ -130,12 +156,124 @@ router.post('/', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.put('/:id', verifyToken, requireAdmin, (req, res) => {
+router.post('/importar', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede importar prendas' });
+  }
+  const { prendas } = req.body;
+  if (!Array.isArray(prendas) || !prendas.length) {
+    return res.status(400).json({ message: 'No se recibieron prendas para importar' });
+  }
+
+  let creadas = 0;
+  let actualizadas = 0;
+  let errores = 0;
+
+  const procesar = (index) => {
+    if (index >= prendas.length) {
+      return res.json({ message: 'Importacion completada', creadas, actualizadas, errores });
+    }
+
+    const item = prendas[index] || {};
+    const nombre = String(item.nombre || '').trim();
+    if (!nombre) {
+      errores += 1;
+      return procesar(index + 1);
+    }
+
+    const descripcion = String(item.descripcion || '').trim();
+    const requiere_plancha = Number(item.requiere_plancha) === 0 ? 0 : 1;
+    const precio_remojo_factura = Number(item.precio_remojo_factura || 0);
+    const precio_lavado_factura = Number(item.precio_lavado_factura || 0);
+    const precio_desmanche_factura = Number(item.precio_desmanche_factura || 0);
+    const precio_planchado_factura = Number(item.precio_planchado_factura || 0);
+    const precio_remojo = Number(item.precio_remojo || 0);
+    const precio_lavado = Number(item.precio_lavado || 0);
+    const precio_desmanche = Number(item.precio_desmanche || 0);
+    const precio_planchado = Number(item.precio_planchado || 0);
+
+    db.get('SELECT id FROM prendas WHERE LOWER(nombre) = LOWER(?)', [nombre], (findErr, existente) => {
+      if (findErr) {
+        errores += 1;
+        return procesar(index + 1);
+      }
+
+      if (existente) {
+        const sqlUpd = `
+          UPDATE prendas SET
+            descripcion = ?,
+            precio_remojo_factura = ?,
+            precio_lavado_factura = ?,
+            precio_desmanche_factura = ?,
+            precio_planchado_factura = ?,
+            precio_remojo = ?,
+            precio_lavado = ?,
+            precio_desmanche = ?,
+            precio_planchado = ?,
+            requiere_plancha = ?,
+            activo = 1
+          WHERE id = ?
+        `;
+        db.run(sqlUpd, [
+          descripcion || null,
+          precio_remojo_factura,
+          precio_lavado_factura,
+          precio_desmanche_factura,
+          precio_planchado_factura,
+          precio_remojo,
+          precio_lavado,
+          precio_desmanche,
+          precio_planchado,
+          requiere_plancha,
+          existente.id
+        ], (updErr) => {
+          if (updErr) errores += 1;
+          else actualizadas += 1;
+          procesar(index + 1);
+        });
+        return;
+      }
+
+      const sqlIns = `
+        INSERT INTO prendas (
+          nombre, descripcion,
+          precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
+          precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
+          requiere_plancha
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      db.run(sqlIns, [
+        nombre,
+        descripcion || null,
+        precio_remojo_factura,
+        precio_lavado_factura,
+        precio_desmanche_factura,
+        precio_planchado_factura,
+        precio_remojo,
+        precio_lavado,
+        precio_desmanche,
+        precio_planchado,
+        requiere_plancha
+      ], (insErr) => {
+        if (insErr) errores += 1;
+        else creadas += 1;
+        procesar(index + 1);
+      });
+    });
+  };
+
+  procesar(0);
+});
+
+router.put('/:id', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede editar prendas' });
+  }
   const { id } = req.params;
   const {
     nombre, descripcion,
-    precio_sucio_factura, precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
-    precio_sucio, precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
+    precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
+    precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
     requiere_plancha, activo
   } = req.body;
 
@@ -143,12 +281,10 @@ router.put('/:id', verifyToken, requireAdmin, (req, res) => {
     UPDATE prendas SET
       nombre = COALESCE(?, nombre),
       descripcion = COALESCE(?, descripcion),
-      precio_sucio_factura = COALESCE(?, precio_sucio_factura),
       precio_remojo_factura = COALESCE(?, precio_remojo_factura),
       precio_lavado_factura = COALESCE(?, precio_lavado_factura),
       precio_desmanche_factura = COALESCE(?, precio_desmanche_factura),
       precio_planchado_factura = COALESCE(?, precio_planchado_factura),
-      precio_sucio = COALESCE(?, precio_sucio),
       precio_remojo = COALESCE(?, precio_remojo),
       precio_lavado = COALESCE(?, precio_lavado),
       precio_desmanche = COALESCE(?, precio_desmanche),
@@ -160,8 +296,8 @@ router.put('/:id', verifyToken, requireAdmin, (req, res) => {
 
   db.run(sql, [
     nombre, descripcion,
-    precio_sucio_factura, precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
-    precio_sucio, precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
+    precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
+    precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
     requiere_plancha, activo, id
   ], function(err) {
     if (err) return res.status(500).json({ error: err.message });
@@ -176,7 +312,10 @@ router.put('/:id', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.delete('/:id', verifyToken, requireAdmin, (req, res) => {
+router.delete('/:id', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede eliminar prendas' });
+  }
   const { id } = req.params;
 
   const sql = 'UPDATE prendas SET activo = 0 WHERE id = ?';

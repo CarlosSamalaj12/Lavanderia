@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { verifyToken, requireAdmin, requireEncargado } = require('../middleware/auth');
+const { verifyToken, requireEncargado } = require('../middleware/auth');
 
 router.get('/', verifyToken, (req, res) => {
   const sql = 'SELECT * FROM departamentos WHERE activo = 1 ORDER BY nombre';
@@ -19,7 +19,10 @@ router.get('/:id', verifyToken, (req, res) => {
   });
 });
 
-router.post('/', verifyToken, requireAdmin, (req, res) => {
+router.post('/', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede crear departamentos' });
+  }
   const { nombre, descripcion } = req.body;
 
   if (!nombre) {
@@ -46,7 +49,10 @@ router.post('/', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.put('/:id', verifyToken, requireAdmin, (req, res) => {
+router.put('/:id', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede editar departamentos' });
+  }
   const { id } = req.params;
   const { nombre, descripcion, activo } = req.body;
 
@@ -71,7 +77,10 @@ router.put('/:id', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.delete('/:id', verifyToken, requireAdmin, (req, res) => {
+router.delete('/:id', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede eliminar departamentos' });
+  }
   const { id } = req.params;
 
   const sql = 'UPDATE departamentos SET activo = 0 WHERE id = ?';

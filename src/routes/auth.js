@@ -12,7 +12,9 @@ router.post('/login', (req, res) => {
     return res.status(400).json({ message: 'Usuario y contraseña requeridos' });
   }
 
-  db.get('SELECT * FROM usuarios WHERE username = ? AND activo = 1', [username], (err, user) => {
+  const normalizedUsername = String(username || '').trim();
+
+  db.get('SELECT * FROM usuarios WHERE LOWER(username) = LOWER(?) AND activo = 1', [normalizedUsername], (err, user) => {
     if (err) {
       return res.status(500).json({ message: 'Error en el servidor' });
     }

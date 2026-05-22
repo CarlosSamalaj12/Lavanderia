@@ -26,14 +26,14 @@ const requireAdmin = (req, res, next) => {
 };
 
 const requireEncargado = (req, res, next) => {
-  if (req.userRol !== 'admin' && req.userRol !== 'encargado') {
-    return res.status(403).json({ message: 'Acceso denegado. Se requiere rol de encargado o administrador' });
+  if (req.userRol !== 'admin' && req.userRol !== 'encargado' && req.userRol !== 'reportes') {
+    return res.status(403).json({ message: 'Acceso denegado. Se requiere rol de encargado, reportes o administrador' });
   }
   next();
 };
 
 const requireAnyRole = (req, res, next) => {
-  const allowedRoles = ['admin', 'encargado', 'trabajador', 'solicitante'];
+  const allowedRoles = ['admin', 'encargado', 'trabajador', 'solicitante', 'reportes'];
   if (!allowedRoles.includes(req.userRol)) {
     return res.status(403).json({ message: 'Acceso denegado' });
   }

@@ -49,6 +49,8 @@ router.get('/por-proceso/:proceso', verifyToken, (req, res) => {
     return res.status(400).json({ message: 'Proceso inválido' });
   }
 
+  const whereStock = proceso === 'stock' ? ' AND pp.departamento_actual IS NULL' : '';
+
   const sql = `
     SELECT
       pp.id,
@@ -61,7 +63,7 @@ router.get('/por-proceso/:proceso', verifyToken, (req, res) => {
     FROM prendas_proceso pp
     JOIN prendas p ON pp.prenda_id = p.id
     LEFT JOIN usuarios u ON pp.usuario_registro = u.id
-    WHERE pp.proceso = ?
+    WHERE pp.proceso = ?${whereStock}
     ORDER BY pp.fecha_ingreso DESC
   `;
   db.all(sql, [proceso], (err, rows) => {

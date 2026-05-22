@@ -48,51 +48,87 @@ function sumarStock(prendaId, proceso, cantidad, userId, done) {
 }
 
 function moverStockProceso(prendaId, procesoOrigen, procesoDestino, cantidad, userId, done) {
-  db.run(
-    `UPDATE prendas_proceso
-     SET cantidad = cantidad - ?
-     WHERE prenda_id = ? AND proceso = ? AND cantidad >= ?`,
-    [cantidad, prendaId, procesoOrigen, cantidad],
-    function(updateErr) {
-      if (updateErr) return done(updateErr);
-      if (this.changes === 0) return done(new Error(`No hay stock suficiente en ${procesoOrigen}`));
+  const qty = Number(cantidad || 0);
+  if (!Number.isFinite(qty) || qty <= 0) {
+    return done(new Error('Cantidad invalida para mover stock'));
+  }
 
-      db.run(
-        `DELETE FROM prendas_proceso
-         WHERE prenda_id = ? AND proceso = ? AND cantidad <= 0`,
-        [prendaId, procesoOrigen],
-        (deleteErr) => {
-          if (deleteErr) return done(deleteErr);
+  const filtroOrigenStock = procesoOrigen === 'stock' ? ' AND departamento_actual IS NULL' : '';
+  const filtroDestinoStock = procesoDestino === 'stock' ? ' AND departamento_actual IS NULL' : '';
 
-          db.get(
-            `SELECT id, cantidad FROM prendas_proceso
-             WHERE prenda_id = ? AND proceso = ?
-             ORDER BY id ASC LIMIT 1`,
-            [prendaId, procesoDestino],
-            (findErr, row) => {
-              if (findErr) return done(findErr);
+  db.all(
+    `SELECT id, cantidad FROM prendas_proceso
+     WHERE prenda_id = ? AND proceso = ?${filtroOrigenStock}
+     ORDER BY id ASC`,
+    [prendaId, procesoOrigen],
+    (rowsErr, rows) => {
+      if (rowsErr) return done(rowsErr);
 
-              if (row) {
-                db.run(
-                  `UPDATE prendas_proceso
-                   SET cantidad = cantidad + ?, fecha_actualizacion = CURRENT_TIMESTAMP
-                   WHERE id = ?`,
-                  [cantidad, row.id],
-                  done
-                );
-                return;
-              }
+      const total = (rows || []).reduce((sum, row) => sum + Number(row.cantidad || 0), 0);
+      if (total < qty) return done(new Error(`No hay stock suficiente en ${procesoOrigen}`));
 
-              db.run(
-                `INSERT INTO prendas_proceso (prenda_id, proceso, cantidad, usuario_registro)
-                 VALUES (?, ?, ?, ?)`,
-                [prendaId, procesoDestino, cantidad, userId],
-                done
-              );
+      const consumirOrigen = (lista, restante, next) => {
+        if (restante <= 0) return next(null);
+        if (!lista.length) return next(new Error(`No fue posible consumir stock en ${procesoOrigen}`));
+
+        const row = lista[0];
+        const actual = Number(row.cantidad || 0);
+        const usar = Math.min(actual, restante);
+        const nueva = actual - usar;
+
+        const avanzar = () => consumirOrigen(lista.slice(1), restante - usar, next);
+
+        if (nueva > 0) {
+          db.run(
+            `UPDATE prendas_proceso
+             SET cantidad = ?, fecha_actualizacion = CURRENT_TIMESTAMP
+             WHERE id = ?`,
+            [nueva, row.id],
+            (uErr) => {
+              if (uErr) return next(uErr);
+              avanzar();
             }
           );
+          return;
         }
-      );
+
+        db.run('DELETE FROM prendas_proceso WHERE id = ?', [row.id], (dErr) => {
+          if (dErr) return next(dErr);
+          avanzar();
+        });
+      };
+
+      consumirOrigen(rows, qty, (consErr) => {
+        if (consErr) return done(consErr);
+
+        db.get(
+          `SELECT id FROM prendas_proceso
+           WHERE prenda_id = ? AND proceso = ?${filtroDestinoStock}
+           ORDER BY id ASC LIMIT 1`,
+          [prendaId, procesoDestino],
+          (findErr, destinoRow) => {
+            if (findErr) return done(findErr);
+
+            if (destinoRow) {
+              db.run(
+                `UPDATE prendas_proceso
+                 SET cantidad = cantidad + ?, fecha_actualizacion = CURRENT_TIMESTAMP
+                 WHERE id = ?`,
+                [qty, destinoRow.id],
+                done
+              );
+              return;
+            }
+
+            db.run(
+              `INSERT INTO prendas_proceso (prenda_id, proceso, cantidad, usuario_registro)
+               VALUES (?, ?, ?, ?)`,
+              [prendaId, procesoDestino, qty, userId],
+              done
+            );
+          }
+        );
+      });
     }
   );
 }
@@ -115,7 +151,7 @@ function obtenerPrecio(trabajador, prenda, proceso) {
 
 function obtenerPrecioFactura(prenda, proceso) {
   switch(proceso) {
-    case 'sucio': return prenda.precio_sucio_factura || 0;
+    case 'sucio': return 0;
     case 'remojo': return prenda.precio_remojo_factura || 0;
     case 'lavado': return prenda.precio_lavado_factura || 0;
     case 'desmanche': return prenda.precio_desmanche_factura || 0;
@@ -126,7 +162,7 @@ function obtenerPrecioFactura(prenda, proceso) {
 
 function obtenerPrecioNormal(prenda, proceso) {
   switch(proceso) {
-    case 'sucio': return prenda.precio_sucio || 0;
+    case 'sucio': return 0;
     case 'remojo': return prenda.precio_remojo || 0;
     case 'lavado': return prenda.precio_lavado || 0;
     case 'desmanche': return prenda.precio_desmanche || 0;
@@ -226,6 +262,10 @@ router.get('/precios', verifyToken, requireEncargado, (req, res) => {
 router.post('/asignar', verifyToken, requireEncargado, (req, res) => {
   const { trabajador_id, proceso, prendas, fecha_asignacion, estado_origen } = req.body;
 
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede asignar tareas' });
+  }
+
   if (!trabajador_id || !proceso || !prendas || !prendas.length) {
     return res.status(400).json({ message: 'Trabajador, proceso y prendas requeridos' });
   }
@@ -275,10 +315,11 @@ router.post('/asignar', verifyToken, requireEncargado, (req, res) => {
           }
 
           const procesoOrigen = (proceso === 'desmanche' && estado_origen) ? estado_origen : (PROCESO_ORIGEN_TAREA[proceso] || proceso);
+          const filtroStockGeneral = procesoOrigen === 'stock' ? ' AND departamento_actual IS NULL' : '';
 
           db.get(`
            SELECT SUM(cantidad) as total FROM prendas_proceso
-           WHERE prenda_id = ? AND proceso = ?
+           WHERE prenda_id = ? AND proceso = ?${filtroStockGeneral}
          `, [item.prenda_id, procesoOrigen], (err, stock) => {
            if (!stock || stock.total < item.cantidad) {
              errores.push({
@@ -475,6 +516,26 @@ router.put('/:id/completar', verifyToken, (req, res) => {
       }
 
       if (procesoSiguiente) {
+        if (procesoSiguiente === 'limpio') {
+          db.get('SELECT requiere_plancha FROM prendas WHERE id = ?', [tarea.prenda_id], (errPrenda, prenda) => {
+            if (errPrenda) return res.status(500).json({ error: errPrenda.message });
+
+            const destinoFinal = prenda && Number(prenda.requiere_plancha) === 1 ? 'limpio' : 'stock';
+            moverStockProceso(tarea.prenda_id, tarea.proceso, destinoFinal, tarea.cantidad, req.userId, (mvErr) => {
+              if (mvErr) return res.status(500).json({ error: mvErr.message });
+
+              const bitacoraSql = `
+                INSERT INTO bitacora (usuario_id, accion, tabla_afectada, registro_id, datos_nuevos)
+                VALUES (?, ?, ?, ?, ?)
+              `;
+              db.run(bitacoraSql, [req.userId, 'COMPLETAR_TAREA', 'tareas', id, JSON.stringify({ proceso_siguiente: destinoFinal })]);
+
+              return res.json({ message: `Tarea completada. Prenda movida a ${destinoFinal}` });
+            });
+          });
+          return;
+        }
+
         moverStockProceso(tarea.prenda_id, tarea.proceso, procesoSiguiente, tarea.cantidad, req.userId, (mvErr) => {
           if (mvErr) return res.status(500).json({ error: mvErr.message });
 

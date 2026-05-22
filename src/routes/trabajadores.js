@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { verifyToken, requireAdmin, requireEncargado } = require('../middleware/auth');
+const { verifyToken, requireEncargado } = require('../middleware/auth');
 
 router.get('/', verifyToken, (req, res) => {
   const sql = `
@@ -27,7 +27,10 @@ router.get('/:id/precios', verifyToken, (req, res) => {
   });
 });
 
-router.post('/', verifyToken, requireAdmin, (req, res) => {
+router.post('/', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede crear trabajadores' });
+  }
   const { nombre, cedula, telefono, factura, precios } = req.body;
 
   if (!nombre) {
@@ -58,7 +61,10 @@ router.post('/', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.put('/:id', verifyToken, requireAdmin, (req, res) => {
+router.put('/:id', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede editar trabajadores' });
+  }
   const { id } = req.params;
   const { nombre, cedula, telefono, factura, activo } = req.body;
 
@@ -85,7 +91,10 @@ router.put('/:id', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.put('/:id/precios', verifyToken, requireAdmin, (req, res) => {
+router.put('/:id/precios', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede editar precios de trabajadores' });
+  }
   const { id } = req.params;
   const { precios } = req.body;
 
@@ -109,7 +118,10 @@ router.put('/:id/precios', verifyToken, requireAdmin, (req, res) => {
   });
 });
 
-router.delete('/:id', verifyToken, requireAdmin, (req, res) => {
+router.delete('/:id', verifyToken, requireEncargado, (req, res) => {
+  if (req.userRol === 'reportes') {
+    return res.status(403).json({ message: 'El rol reportes no puede eliminar trabajadores' });
+  }
   const { id } = req.params;
 
   const sql = 'UPDATE trabajadores SET activo = 0 WHERE id = ?';

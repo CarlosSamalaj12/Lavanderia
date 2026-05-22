@@ -20,7 +20,7 @@ function initializeTables() {
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         nombre TEXT NOT NULL,
-        rol TEXT NOT NULL CHECK(rol IN ('admin', 'encargado', 'trabajador', 'solicitante')),
+        rol TEXT NOT NULL CHECK(rol IN ('admin', 'encargado', 'trabajador', 'solicitante', 'reportes')),
         activo INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
@@ -41,12 +41,10 @@ function initializeTables() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nombre TEXT NOT NULL,
         descripcion TEXT,
-        precio_sucio_factura REAL DEFAULT 0,
         precio_remojo_factura REAL DEFAULT 0,
         precio_lavado_factura REAL DEFAULT 0,
         precio_desmanche_factura REAL DEFAULT 0,
         precio_planchado_factura REAL DEFAULT 0,
-        precio_sucio REAL DEFAULT 0,
         precio_remojo REAL DEFAULT 0,
         precio_lavado REAL DEFAULT 0,
         precio_desmanche REAL DEFAULT 0,
@@ -191,7 +189,6 @@ function initializeTables() {
     });
 
     const columnasPrecioFactura = [
-      'precio_sucio_factura',
       'precio_remojo_factura',
       'precio_lavado_factura',
       'precio_desmanche_factura',

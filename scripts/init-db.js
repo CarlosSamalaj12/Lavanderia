@@ -33,19 +33,19 @@ const queries = [
   {
     name: 'Crear prendas',
     sql: `
-      INSERT OR IGNORE INTO prendas (nombre, descripcion, precio_sucio, precio_remojo, precio_lavado, precio_desmanche, precio_planchado, requiere_plancha)
+      INSERT OR IGNORE INTO prendas (nombre, descripcion, precio_remojo, precio_lavado, precio_desmanche, precio_planchado, requiere_plancha)
       VALUES
-        ('Camisa blanca', 'Camisa de empleado branca', 50, 40, 60, 80, 30, 1),
-        ('Camisa negra', 'Camisa de empleado negra', 50, 40, 60, 80, 30, 1),
-        ('Pantalón negro', 'Pantalón de uniforme', 45, 35, 55, 75, 25, 1),
-        ('Delantal', 'Delantal de trabajo', 30, 25, 40, 50, 15, 1),
-        ('Toalla grande', 'Toalla de baño', 35, 30, 45, 55, 20, 1),
-        ('Toalla pequeña', 'Toalla de mano', 20, 15, 25, 35, 10, 1),
-        ('Sábanas queen', 'Sábana para cama queen', 60, 50, 70, 90, 35, 1),
-        ('Sábanas king', 'Sábana para cama king', 70, 60, 80, 100, 40, 1),
-        ('Funda almohada', 'Funda de almohada', 15, 10, 20, 25, 10, 1),
-        ('Uniforme chef', 'Uniforme completo de chef', 80, 70, 90, 120, 50, 1),
-        ('Bata laboratorio', 'Bata de laboratorio', 40, 35, 50, 65, 25, 0)
+        ('Camisa blanca', 'Camisa de empleado branca', 40, 60, 80, 30, 1),
+        ('Camisa negra', 'Camisa de empleado negra', 40, 60, 80, 30, 1),
+        ('Pantalón negro', 'Pantalón de uniforme', 35, 55, 75, 25, 1),
+        ('Delantal', 'Delantal de trabajo', 25, 40, 50, 15, 1),
+        ('Toalla grande', 'Toalla de baño', 30, 45, 55, 20, 1),
+        ('Toalla pequeña', 'Toalla de mano', 15, 25, 35, 10, 1),
+        ('Sábanas queen', 'Sábana para cama queen', 50, 70, 90, 35, 1),
+        ('Sábanas king', 'Sábana para cama king', 60, 80, 100, 40, 1),
+        ('Funda almohada', 'Funda de almohada', 10, 20, 25, 10, 1),
+        ('Uniforme chef', 'Uniforme completo de chef', 70, 90, 120, 50, 1),
+        ('Bata laboratorio', 'Bata de laboratorio', 35, 50, 65, 25, 0)
     `
   },
   {

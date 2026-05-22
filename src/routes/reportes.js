@@ -258,7 +258,7 @@ router.get('/pagos/total', verifyToken, (req, res) => {
 });
 
 router.get('/tareas/completadas', verifyToken, (req, res) => {
-  const { fecha_inicio, fecha_fin, trabajador_id } = req.query;
+  const { fecha_inicio, fecha_fin, trabajador_id, proceso } = req.query;
 
   let sql = `
     SELECT
@@ -289,6 +289,10 @@ router.get('/tareas/completadas', verifyToken, (req, res) => {
   if (trabajador_id) {
     sql += ' AND t.trabajador_id = ?';
     params.push(trabajador_id);
+  }
+  if (proceso) {
+    sql += ' AND t.proceso = ?';
+    params.push(proceso);
   }
 
   sql += ' ORDER BY t.fecha_fin DESC';
