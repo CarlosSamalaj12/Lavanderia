@@ -1,9 +1,9 @@
-﻿module.exports = {
+module.exports = {
   apps: [
     {
       name: 'lavanderia-backend',
       script: 'src/server.js',
-      cwd: 'C:/xampp/htdocs/Lavanderia',
+      cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
       autorestart: true,
@@ -17,6 +17,3 @@
     }
   ]
 };
-
-
-

@@ -1,0 +1,77 @@
+/* ==========================================================================
+   Componentes: Badges, Indicadores y Micro-chips
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-xs, 4px);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-success {
+  background: var(--color-success, #27ae60);
+  color: var(--text-light, #ffffff);
+}
+
+.badge-warning {
+  background: var(--color-warning, #f39c12);
+  color: var(--text-light, #ffffff);
+}
+
+.badge-danger {
+  background: var(--color-danger, #e74c3c);
+  color: var(--text-light, #ffffff);
+}
+
+.badge-info {
+  background: var(--color-secondary, #3498db);
+  color: var(--text-light, #ffffff);
+}
+
+/* Punto indicador de estado activo */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  background: #2ecc71;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #2ecc71;
+  animation: dotPulse 2s infinite;
+  display: inline-block;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 10px #2ecc71;
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 18px #2ecc71;
+  }
+}
+
+/* Indicador de contador de resultados en búsquedas */
+.search-counter {
+  font-size: 11px;
+  color: var(--text-muted, #7f8c8d);
+  margin-top: 4px;
+}
+
+/* Resaltado de atención en campos con error */
+.field-attention {
+  border-color: var(--color-danger, #e74c3c) !important;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.18) !important;
+  animation: fieldPulse 0.65s ease;
+}
+
+@keyframes fieldPulse {
+  0% { transform: translateY(0); }
+  35% { transform: translateY(-1px); }
+  100% { transform: translateY(0); }
+}

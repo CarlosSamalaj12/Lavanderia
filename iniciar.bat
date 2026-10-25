@@ -44,7 +44,7 @@ echo ===============================================
 echo.
 echo Iniciando Sistema de Lavanderia...
 echo.
-echo URL: http://localhost:3000
+echo URL: http://localhost:3100
 echo.
 echo Presiona Ctrl+C para detener el servidor
 echo.

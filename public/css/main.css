@@ -1,0 +1,28 @@
+/* ==========================================================================
+   Main CSS Master File - Sistema de Lavandería Industrial
+   Arquitectura Modular: Base -> Layout -> Componentes
+   ========================================================================== */
+
+/* 1. Capa Base */
+@import "./base/variables.css";
+@import "./base/reset.css";
+@import "./base/typography.css";
+
+/* 2. Capa de Layout y Estructura */
+@import "./layout/container.css";
+@import "./layout/nav.css";
+@import "./layout/bottom-nav.css";
+@import "./layout/print.css";
+
+/* 3. Capa de Componentes Reutilizables */
+@import "./components/buttons.css";
+@import "./components/cards.css";
+@import "./components/forms.css";
+@import "./components/tables.css";
+@import "./components/modals.css";
+@import "./components/toasts.css";
+@import "./components/badges.css";
+@import "./components/tabs.css";
+@import "./components/pedidos.css";
+@import "./components/dashboard.css";
+@import "./components/tareas.css";

@@ -26,21 +26,28 @@ const parseAllowedOrigins = () => {
 };
 
 const allowedOrigins = parseAllowedOrigins();
-const allowAllOrigins = allowedOrigins.length === 0;
+const allowAllOrigins = allowedOrigins.length === 0 || allowedOrigins.includes('*');
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowAllOrigins) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  // Localhost o 127.0.0.1 en cualquier puerto
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  // Redes locales privadas (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+  if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin)) return true;
+  return false;
+};
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
       return;
     }
 
-    if (allowAllOrigins || allowedOrigins.includes(origin)) {
-      callback(null, true);
-      return;
-    }
-
-    callback(new Error('Origin no permitido por CORS.'));
+    console.warn(`[CORS REJECTED] Origin no permitido: ${origin}`);
+    callback(new Error(`Origin no permitido por CORS: ${origin}`));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   credentials: true
@@ -86,6 +93,10 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
-app.listen(PORT, HOST, () => {
-  console.log(`Servidor corriendo en http://${HOST}:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, HOST, () => {
+    console.log(`Servidor corriendo en http://${HOST}:${PORT}`);
+  });
+}
+
+module.exports = app;

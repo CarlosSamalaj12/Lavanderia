@@ -1,218 +1,85 @@
-# 🧺 Sistema de Gestión de Lavandería - Documento de Instalación
+# 🧺 Sistema de Gestión de Lavandería Industrial
 
-## Descripción del Sistema
-
-Sistema moderno de gestión de lavandería construido con **Node.js**, **Express**, **Socket.io** y **SQLite**. Diseñado para:
-
-- **Gestión de prendas** por estados (remojo, lavado, tendido, recogido, planchado, reproceso)
-- **Asignación de personas** para cada tarea
-- **Control de precios** por estado y tipo de prenda
-- **Seguimiento en tiempo real** con Socket.io
-- **Historial completo** de cada prenda
-- **Dashboard de estadísticas** y costos
+Sistema modular de gestión de lavandería construido con **Node.js**, **Express**, **SQLite** y arquitectura por capas (**Rutas $\to$ Controladores $\to$ Servicios**), con interfaz optimizada para operarios móviles y tablets de planta (diseño industrial Stitch).
 
 ---
 
-## 🚀 Instalación
+## 🚀 Inicio Rápido
 
 ### Requisitos previos
-- **Node.js** (v14 o superior) - Descargar de https://nodejs.org/
-- **Git** (opcional)
-- Un navegador web moderno (Chrome, Firefox, Edge, Safari)
+- **Node.js** (v16 o superior) - [nodejs.org](https://nodejs.org/)
+- Navegador web moderno con soporte para PWA
 
-### Pasos de instalación
+### Pasos para iniciar
 
-1. **Abrir PowerShell o CMD en la carpeta del proyecto**
-   ```powershell
-   cd c:\Users\samal\Documents\Lavanderia
-   ```
-
-2. **Instalar dependencias**
-   ```powershell
+1. **Instalar dependencias**
+   ```bash
    npm install
    ```
-   
-   Esto descargará e instalará:
-   - express (servidor web)
-   - socket.io (comunicación en tiempo real)
-   - sqlite3 (base de datos)
-   - cors (seguridad)
-   - body-parser (pars de JSON)
 
-3. **Iniciar el servidor**
-   ```powershell
+2. **Iniciar en modo desarrollo / producción**
+   ```bash
+   npm run dev
+   # o bien:
    npm start
    ```
 
-   Deberías ver:
+3. **Abrir en el navegador**
+   - URL: **http://localhost:3100**
+   - Usuario administrador por defecto: `admin` / `admin`
+
+4. **Ejecutar suite de pruebas de servicios**
+   ```bash
+   npm run test:services
    ```
-   ⏺️ Servidor de Lavandería ejecutándose en http://localhost:3000
-   📊 Base de datos: C:\Users\samal\Documents\Lavanderia\lavanderia.db
-   ```
-
-4. **Abrir en navegador**
-   - Ir a: **http://localhost:3000**
-   - La base de datos se creará automáticamente en la primera ejecución
 
 ---
 
-## 📋 Funcionalidades
-
-### Dashboard
-- Vista general de estados
-- Cantidad de prendas en cada estado
-- Costo acumulado por estado
-- Total de costos
-
-### Crear Prenda
-- Tipo de prenda (Toalla de Playa, Sábana, Ropa de Cama, Uniforme)
-- Descripción personalizada
-- Cantidad
-- Se registra automáticamente con precios configurados
-
-### Prendas en Proceso
-- Listar todas las prendas
-- Filtrar por estado
-- Ver detalles de la prenda
-- Asignar tarea a persona
-- Ver historial completo
-
-### Personas
-- Registrar trabajadores
-- Teléfono y correo (opcionales)
-- Lista de personas disponibles para asignar
-
-### Estadísticas
-- Tabla de costos por estado
-- Cantidad de operaciones completadas
-- Costo promedio por tarea
-
----
-
-## 💰 Configuración de Precios
-
-Los precios por defecto para "Toalla de Playa":
-
-| Estado | Precio |
-|--------|--------|
-| Remojo | $0.10 |
-| Lavado | $0.75 |
-| Tendido | $0.00 |
-| Recogido | $0.00 |
-| Planchado | $0.50 |
-| Reproceso | $0.25 |
-
-**Para modificar precios**, edita en `backend/database.js` la sección de precios por defecto (líneas 51-56).
-
----
-
-## 🔄 Flujo de Trabajo
-
-1. **Crear Prenda**: Registra el tipo y cantidad de prendas
-2. **Asignar a Remojo**: Selecciona persona, se asigna el precio ($0.10)
-3. **Completar → Siguiente Estado**: 
-   - Remojo → Lavado
-   - Lavado → Tendido
-   - Tendido → Recogido
-   - Recogido → Planchado
-   - Planchado → Completado o Reproceso
-
-4. **Si está sucio**: Puede pasar a **Reproceso** ($0.25) y regresa a cualquier estado anterior
-
----
-
-## 🗂️ Estructura del Proyecto
+## 🏗️ Arquitectura del Proyecto
 
 ```
-Lavanderia/
-├── backend/
-│   ├── server.js          (Servidor Express + Socket.io)
-│   └── database.js        (Gestión de SQLite)
-├── frontend/
-│   ├── index.html         (Interfaz)
+├── public/                     # Frontend modular nativo (sin bundlers)
 │   ├── css/
-│   │   └── styles.css     (Estilos)
-│   └── js/
-│       └── app.js         (Lógica de cliente)
-├── package.json           (Dependencias)
-├── lavanderia.db          (Base de datos - se crea automáticamente)
-└── README.md              (Este archivo)
+│   │   ├── main.css            # Estilos base, layout, cards, tablas y alertas
+│   │   ├── modals.css          # Estilos de diálogos y overlays
+│   │   └── mobile.css          # Sistema responsive, Bottom Nav y Bottom Sheets
+│   ├── js/
+│   │   ├── core/               # Núcleo (state.js, api.js, ui.js)
+│   │   ├── modules/            # Módulos desacoplados (auth, tareas, pedidos, etc.)
+│   │   └── app.js              # Inicialización y ciclo de vida
+│   ├── index.html              # Shell HTML semántico y ligero (1,144 líneas)
+│   ├── sw.js                   # Service Worker PWA con caché v4
+│   └── manifest.webmanifest    # Manifiesto de aplicación web instalable
+│
+├── src/                        # Backend modular por capas
+│   ├── config/
+│   │   └── database.js         # Conexión e inicialización de SQLite
+│   ├── controllers/            # Controladores HTTP (12 módulos)
+│   ├── services/               # Lógica de negocio pura (12 módulos)
+│   ├── routes/                 # Enrutadores delegadores delgados
+│   ├── middleware/             # Auth JWT, error-handler, async-handler
+│   ├── utils/                  # Consultas asíncronas seguras (db-async.js)
+│   └── server.js               # Servidor Express centralizado
+│
+├── scripts/
+│   ├── init-db.js              # Sembrador inicial de base de datos
+│   └── test-services.js        # Suite de pruebas automatizadas
+│
+├── lavanderia.db               # Base de datos SQLite activa
+├── .env                        # Variables de entorno (PORT=3100, HOST=0.0.0.0)
+└── package.json
 ```
 
 ---
 
-## 🔇 Detener el servidor
+## 📋 Módulos Principales
 
-- En PowerShell/CMD: Presiona **Ctrl + C**
-
----
-
-## 🐛 Solución de Problemas
-
-### "npm: No se reconoce el comando"
-- Node.js no está instalado
-- Solución: Descargar e instalar desde https://nodejs.org/
-
-### "Error: EADDRINUSE :::3000"
-- El puerto 3000 ya está en uso
-- Solución: Cambiar puerto en `backend/server.js` línea 8
-
-### "No puedo abrir http://localhost:3000"
-- Verificar que el servidor está corriendo (ver el mensaje ⏺️)
-- Esperar 2-3 segundos después de iniciar
-- Probar en navegador diferente
-
-### "Base de datos vacía"
-- Es normal en la primera ejecución
-- Crear una prenda para ver todas las funcionalidades
-
----
-
-## 📝 APIs Disponibles
-
-### GET `/api/prendas`
-Obtiene todas gaseosas las prendas con su estado actual
-
-### POST `/api/prendas`
-Crea una nueva prenda
-
-### POST `/api/asignar-tarea`
-Asigna una persona a una tarea y cambia el estado
-
-### POST `/api/completar-tarea`
-Marca tarea como completada y avanza al siguiente estado
-
-### GET `/api/personas`
-Obtiene todas las personas registradas
-
-### POST `/api/personas`
-Crea una nueva persona
-
-### GET `/api/prendas/:id/historial`
-Obtiene el historial completo de una prenda
-
-### GET `/api/estadisticas`
-Obtiene estadísticas de costos
-
----
-
-## 💡 Consejos de Uso
-
-- **Registra personas primero**: Para que estén disponibles al asignar tareas
-- **Usa descripciones claras**: En "Descripción" de prendas para identificarlas fácilmente
-- **Revisa el historial**: Para auditar el proceso de una prenda
-- **Dashboard actualiza en tiempo real**: Los datos se sincronizan automáticamente
-
----
-
-## 📞 Notas Importantes
-
-- La base de datos es local (SQLite), no requiere servidor externo
-- Socket.io proporciona actualizaciones en tiempo real
-- Los datos se guardan permanentemente en `lavanderia.db`
-- Es seguro desconectar/reconectar clientes - los datos persisten
-
----
-
-**Versión**: 1.0.0  
-**Última actualización**: Abril 2026
+1. **Dashboard & KPIs:** Telemetría en tiempo real de lotes en proceso, prendas limpias y urgencias.
+2. **Procesos:** Seguimiento del flujo de lavado (Sucio $\to$ Remojo $\to$ Lavado $\to$ Tendido $\to$ Recogido $\to$ Planchado $\to$ Stock).
+3. **Tareas Operativas:** Creación, asignación de trabajadores de planta y registro de tiempos.
+4. **Pedidos & Despacho:** Carrito de requisiciones por departamento, control de stock y confirmación de entrega.
+5. **Devoluciones:** Registro y trazabilidad de prendas devueltas o reprocesadas.
+6. **Lavandería Externa:** Control de lotes enviados a maquila externa, fechas de retorno y costos.
+7. **Catálogos & Configuración:** Administración de Prendas, Trabajadores, Departamentos y Usuarios con roles.
+8. **Reportes:** Exportación de resúmenes operativos por período, trabajador y departamento.
+9. **Experiencia Móvil:** Barra inferior fija ergonómica para el pulgar (**Bottom Navigation Bar**) y paneles deslizables (**Bottom Sheets**).

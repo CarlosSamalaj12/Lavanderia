@@ -1,0 +1,51 @@
+/* ==========================================================================
+   Componentes: Tablas y Celdas de Datos
+   ========================================================================== */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 18px;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-table, #e2e8f0);
+}
+
+th {
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  color: var(--text-light, #ffffff);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  padding: 14px 12px;
+}
+
+tr:hover {
+  background: #f8f9fa;
+}
+
+td {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* Envoltorio responsivo para dispositivos móviles */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th,
+  td {
+    padding: 8px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}

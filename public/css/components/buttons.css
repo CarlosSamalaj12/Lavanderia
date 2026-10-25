@@ -1,0 +1,130 @@
+/* ==========================================================================
+   Componentes: Botones e Interacciones Táctiles
+   ========================================================================== */
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: var(--color-secondary, #3498db);
+  color: var(--text-light, #ffffff);
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+button:hover {
+  background: var(--color-secondary-hover, #2980b9);
+}
+
+.btn {
+  padding: 11px 22px;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
+  box-shadow: var(--shadow-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Variantes de Color */
+.btn-primary {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: var(--text-light, #ffffff);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2980b9, #1f6dad);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #27ae60, #219a52);
+  color: var(--text-light, #ffffff);
+}
+.btn-success:hover {
+  background: linear-gradient(135deg, #219a52, #1e8449);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: var(--text-light, #ffffff);
+}
+.btn-danger:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #f39c12, #d68910);
+  color: var(--text-light, #ffffff);
+}
+.btn-warning:hover {
+  background: linear-gradient(135deg, #d68910, #b8780e);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+  color: var(--text-light, #ffffff);
+}
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #7f8c8d, #616a6b);
+}
+
+/* Tamaños y Layout */
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  min-width: 90px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-table {
+  padding: 0;
+  font-size: 14px;
+  min-width: 32px;
+  height: 32px;
+  width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 2px;
+  line-height: 1;
+}
+
+.btn-table .mi {
+  margin-right: 0;
+  font-size: 18px;
+  color: var(--text-light, #ffffff);
+}
+
+/* Efecto Táctil Industrial */
+.tactile-btn {
+  transition: transform 0.08s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tactile-btn:active,
+.btn:active {
+  transform: translateY(2px) scale(0.98);
+}

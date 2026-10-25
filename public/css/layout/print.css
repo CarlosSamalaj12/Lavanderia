@@ -1,0 +1,84 @@
+/* ==========================================================================
+   Layout: Formato de Impresión para Tickets Térmicos de 80mm
+   ========================================================================== */
+
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* Ocultar elementos de navegación y app en el ticket físico */
+  .premium-nav,
+  .mobile-bottom-nav,
+  .mobile-drawer-backdrop,
+  #toast-container,
+  #uiDialog,
+  #shortcutModal {
+    display: none !important;
+  }
+
+  .ticket-print-body {
+    font-family: var(--font-family-mono, monospace);
+    width: 80mm;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 6px;
+    margin: 0 auto;
+  }
+
+  .ticket-print-body .header {
+    text-align: center;
+    border-bottom: 1px dashed #000000;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+
+  .ticket-print-body .title {
+    font-size: 22px;
+    font-weight: 900;
+  }
+
+  .ticket-print-body .section {
+    border-bottom: 1px dashed #666666;
+    padding: 6px 0;
+    margin-bottom: 6px;
+  }
+
+  .ticket-print-body .section-title {
+    font-weight: 900;
+    font-size: 20px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .ticket-print-body .info {
+    margin: 4px 0;
+    font-size: 16px;
+  }
+
+  .ticket-print-body .item {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 16px;
+  }
+
+  .ticket-print-body .footer {
+    text-align: center;
+    font-size: 13px;
+    margin-top: 12px;
+    border-top: 1px dashed #000000;
+    padding-top: 8px;
+  }
+}

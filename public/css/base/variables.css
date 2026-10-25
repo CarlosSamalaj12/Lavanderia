@@ -1,0 +1,72 @@
+/* ==========================================================================
+   Base: Variables CSS y Tokens de Diseño
+   Sistema de Lavandería Industrial
+   ========================================================================== */
+
+:root {
+  /* Paleta Corporativa e Industrial */
+  --color-primary: #0f5b47;
+  --color-primary-hover: #0b4535;
+  --color-primary-light: #abf1d6;
+  --color-primary-focus: rgba(15, 91, 71, 0.25);
+
+  --color-secondary: #3498db;
+  --color-secondary-hover: #2980b9;
+  --color-secondary-focus: rgba(52, 152, 219, 0.25);
+
+  --color-accent-mint: #10b981;
+  --color-accent-mint-light: #34d399;
+
+  /* Estados y Alertas Semánticas */
+  --color-success: #27ae60;
+  --color-success-hover: #219a52;
+  --color-danger: #e74c3c;
+  --color-danger-hover: #c0392b;
+  --color-danger-light: #fdeceb;
+  --color-danger-border: #f3b7b2;
+  --color-warning: #f39c12;
+  --color-warning-hover: #d68910;
+  --color-warning-light: #fffbeb;
+  --color-info: #3b82f6;
+
+  /* Fondos y Superficies */
+  --bg-body: #f0f4f8;
+  --bg-card: #ffffff;
+  --bg-input: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  --bg-nav: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --bg-nav-dark: #111c2d;
+  --bg-surface-elevated: #172439;
+
+  /* Tipografía y Textos */
+  --font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-mono: 'Courier New', monospace;
+  --text-primary: #1f2d3d;
+  --text-heading: #2c3e50;
+  --text-muted: #7f8c8d;
+  --text-light: #ffffff;
+  --text-nav-inactive: rgba(255, 255, 255, 0.7);
+
+  /* Bordes y Líneas */
+  --border-color: #cbd6e2;
+  --border-light: #ecf0f1;
+  --border-table: #e2e8f0;
+
+  /* Radios de Esquina */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Sombras y Elevaciones */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 10px 26px rgba(30, 58, 95, 0.1);
+  --shadow-drawer: 0 -12px 40px rgba(0, 0, 0, 0.6);
+
+  /* Transiciones */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-smooth: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}

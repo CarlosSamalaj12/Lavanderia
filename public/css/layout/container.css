@@ -1,0 +1,199 @@
+/* ==========================================================================
+   Layout: Contenedores, Secciones y Grillas
+   ========================================================================== */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.content {
+  display: none;
+  padding: 24px;
+  background: var(--bg-card, #ffffff);
+  margin-top: 20px;
+  border-radius: var(--radius-md, 10px);
+  box-shadow: var(--shadow-sm);
+}
+
+.content.active {
+  display: block;
+}
+
+/* Grillas estructurales */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Panel de Login */
+.login-container {
+  max-width: 440px;
+  margin: 80px auto;
+  padding: 34px;
+  border-radius: var(--radius-lg, 14px);
+  border: 1px solid var(--border-color, #cbd6e2);
+  background: var(--bg-card, #ffffff);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary, #1f2d3d);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+  text-align: center;
+  color: var(--text-heading, #2c3e50);
+}
+
+.login-subtitle {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--text-muted, #7f8c8d);
+  font-size: 13px;
+  letter-spacing: 0.2px;
+}
+
+.login-brand-logo {
+  display: block;
+  width: min(320px, 90%);
+  max-height: 90px;
+  margin: 0 auto 10px;
+  object-fit: contain;
+}
+
+.password-shell {
+  position: relative;
+}
+
+.password-shell input {
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--color-secondary, #3498db);
+  background: var(--color-secondary, #3498db);
+  color: var(--text-light, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 2;
+}
+
+.password-toggle:hover {
+  background: var(--color-secondary-hover, #2980b9);
+}
+
+.password-toggle .mi {
+  font-size: 18px;
+  margin: 0;
+  color: #ffffff;
+}
+
+#loginBtn {
+  margin-top: 10px;
+  border-radius: var(--radius-md, 10px);
+}
+
+#loginError {
+  background: var(--color-danger-light, #fdeceb);
+  border: 1px solid var(--color-danger-border, #f3b7b2);
+  color: var(--color-danger, #e74c3c);
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+  display: none;
+}
+
+/* Grilla de Métricas / Estadísticas */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.stat-card {
+  background: var(--bg-card, #ffffff);
+  padding: 20px;
+  border-radius: var(--radius-md, 10px);
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  border: 1px solid var(--border-light, #ecf0f1);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card h3 {
+  color: var(--color-secondary, #3498db);
+  font-size: 32px;
+  margin: 10px 0;
+}
+
+.stat-card p {
+  color: var(--text-muted, #7f8c8d);
+  font-weight: 600;
+}
+
+/* KPIs de Tareas */
+.tareas-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.tareas-kpi {
+  background: #f7fbff;
+  border: 1px solid #dce8f4;
+  border-radius: var(--radius-md, 10px);
+  padding: 10px;
+  text-align: center;
+}
+
+.tareas-kpi .num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-heading, #2c3e50);
+}
+
+.tareas-kpi .label {
+  font-size: 12px;
+  color: var(--text-muted, #7f8c8d);
+}
+
+/* Adaptación responsive */
+@media (max-width: 1024px) {
+  .container { padding: 14px; }
+  .content { padding: 14px; margin-top: 12px; }
+}
+
+@media (max-width: 768px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 8px; }
+  .content { padding: 10px; }
+  .stats { grid-template-columns: 1fr; }
+}
