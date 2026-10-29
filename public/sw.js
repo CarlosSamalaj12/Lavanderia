@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lavanderia-shell-v18';
+const CACHE_NAME = 'lavanderia-shell-v25';
 const APP_SHELL = [
   './',
   './index.html',

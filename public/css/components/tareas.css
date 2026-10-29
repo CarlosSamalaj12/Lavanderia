@@ -885,3 +885,1439 @@
   margin-bottom: 8px;
   color: #cbd5e1;
 }
+
+
+/* ==========================================================================
+   CANASTA MULTI-PRENDA (Asignador Rápido de Lotes)
+   ========================================================================== */
+
+.prenda-entry-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prenda-qty-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-add-garment {
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+  margin-left: auto;
+}
+
+.btn-add-garment:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+}
+
+.btn-add-garment:active {
+  transform: translateY(0);
+}
+
+.key-shortcut-hint {
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 1px 5px;
+  font-family: inherit;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+/* Sección de la Canasta */
+.canasta-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.canasta-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.canasta-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canasta-heading {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.canasta-count-pill {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.canasta-clear-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.canasta-clear-btn:hover {
+  background: #fee2e2;
+}
+
+.canasta-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.canasta-empty-state {
+  text-align: center;
+  padding: 24px 16px;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Tarjeta / Fila de Ítem en Canasta */
+.canasta-item-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.canasta-item-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.canasta-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.canasta-item-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.canasta-item-meta {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.canasta-item-rates {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canasta-rate-badge {
+  font-size: 11px;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.canasta-subtotal-badge {
+  font-size: 12px;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+.canasta-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.canasta-qty-editor {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.canasta-qty-btn {
+  background: transparent;
+  border: none;
+  width: 26px;
+  height: 26px;
+  font-weight: 800;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.canasta-qty-btn:hover {
+  background: #e2e8f0;
+}
+
+.canasta-qty-val {
+  min-width: 32px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 13px;
+  color: #0f172a;
+  padding: 0 4px;
+}
+
+.canasta-del-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.canasta-del-btn:hover {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+/* Barra de Métricas y Totales */
+.canasta-totals-bar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.canasta-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.canasta-stat-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.canasta-stat-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.canasta-stat-value.text-blue {
+  color: #0284c7;
+}
+
+.canasta-stat-value.text-green {
+  color: #16a34a;
+}
+
+@media (max-width: 600px) {
+  .btn-add-garment {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+  .prenda-qty-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .canasta-item-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .canasta-item-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .canasta-totals-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
+/* ==========================================================================
+   INPUTBOX MODAL RÁPIDO DE CANTIDAD CON AUTOFOCUS (Diseño Stitch Premium)
+   ========================================================================== */
+
+/* Eliminar spinners nativos en inputs numéricos del modal */
+.qinput-num-field::-webkit-outer-spin-button,
+.qinput-num-field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.qinput-num-field {
+  -moz-appearance: textfield;
+}
+
+/* Modal Content personalizado */
+.modal-inputbox-quick {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.28) !important;
+  overflow: hidden;
+  max-width: 440px !important;
+}
+
+/* Header */
+.qinput-header {
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.qinput-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.qinput-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.25);
+  flex-shrink: 0;
+}
+
+.qinput-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.qinput-proc-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  display: inline-block;
+  margin-top: 3px;
+}
+
+.qinput-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.qinput-close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Hero Banner de la Prenda */
+.qinput-item-banner {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.qinput-item-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.qinput-garment-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.2px;
+}
+
+.qinput-stock-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.qinput-stock-badge.empty {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.qinput-rate-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  padding: 4px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Stepper Central */
+.qinput-center-stepper {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.qinput-prompt-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.qinput-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.qinput-step-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  color: #334155;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.qinput-step-btn:hover {
+  background: #f8fafc;
+  border-color: #0284c7;
+  color: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(2, 132, 199, 0.15);
+}
+
+.qinput-step-btn:active {
+  transform: scale(0.96);
+}
+
+.qinput-num-field {
+  width: 140px;
+  height: 48px;
+  font-size: 28px;
+  font-weight: 900;
+  text-align: center;
+  color: #0f172a;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.18s;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.qinput-num-field:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.16);
+}
+
+/* Presets Rápidos */
+.qinput-presets-wrap {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.qinput-preset-pill {
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.qinput-preset-pill:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f0f9ff;
+  transform: translateY(-1px);
+}
+
+.qinput-preset-pill:active {
+  transform: scale(0.96);
+}
+
+.qinput-preset-all {
+  background: #e0f2fe;
+  color: #0284c7;
+  border-color: #bae6fd;
+  font-weight: 800;
+}
+
+.qinput-preset-all:hover {
+  background: #bae6fd;
+  color: #0369a1;
+}
+
+/* Bento Subtotal */
+.qinput-summary-box {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.qinput-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qinput-summary-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #dcfce7;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.qinput-summary-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #166534;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.qinput-summary-formula {
+  font-size: 11.5px;
+  color: #15803d;
+  margin-top: 1px;
+}
+
+.qinput-summary-total {
+  font-size: 20px;
+  font-weight: 900;
+  color: #15803d;
+}
+
+/* Footer */
+.qinput-footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.qinput-btn-cancel {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 9px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+
+.qinput-btn-cancel:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.qinput-btn-confirm {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  font-size: 13.5px;
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 9px 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: auto;
+}
+
+.qinput-btn-confirm:hover {
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+  transform: translateY(-1px);
+}
+
+.qinput-btn-confirm:active {
+  transform: translateY(0);
+}
+
+.qinput-kbd-shortcut {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 5px;
+  font-size: 10px;
+  padding: 1px 6px;
+  font-weight: 800;
+  font-family: inherit;
+  letter-spacing: 0.2px;
+}
+
+
+/* Alerta no nativa con diseño Stitch para el modal de cantidad */
+.qinput-alert-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  animation: qinputAlertShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes qinputAlertShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.qinput-alert-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qinput-alert-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.qinput-alert-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #991b1b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.qinput-alert-desc {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b91c1c;
+  margin: 2px 0 0 0;
+  line-height: 1.2;
+}
+
+
+/* ==========================================================================
+   NUEVO ASIGNADOR DUAL-GRID (2 COLUMNAS SIDE-BY-SIDE TIPO ESCRITORIO)
+   ========================================================================== */
+
+.asignador-dual-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+/* 1. Barra Superior de Parámetros */
+.asignador-top-bar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.6fr auto;
+  align-items: flex-end;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.top-bar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.top-bar-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kbd-hint {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 9.5px;
+  padding: 1px 5px;
+  color: #64748b;
+  font-family: inherit;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.top-bar-select {
+  height: 38px;
+  border-radius: 9px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.top-bar-select:focus {
+  border-color: #0284c7;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.top-bar-search-input {
+  width: 100%;
+  height: 38px;
+  border-radius: 9px;
+  border: 2px solid #0284c7;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 6px 36px 6px 12px;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+  transition: all 0.15s;
+}
+
+.top-bar-search-input:focus {
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.22);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 6px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.search-clear-btn:hover {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+.top-bar-stock-filter {
+  display: flex;
+  align-items: center;
+  height: 38px;
+}
+
+.stock-filter-check-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  background: #f1f5f9;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  user-select: none;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.stock-filter-check-label:hover {
+  background: #e2e8f0;
+}
+
+/* 2. Cuerpo Dual (Catálogo vs Canasta) */
+.dual-grid-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.dual-panel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 520px;
+}
+
+.dual-panel-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.panel-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.panel-count-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.panel-count-badge.basket-badge {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.btn-clear-basket-all {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.btn-clear-basket-all:hover {
+  background: #fee2e2;
+}
+
+/* Tablas Paralelas */
+.dual-table-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.dual-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.dual-table thead {
+  position: sticky;
+  top: 0;
+  background: #f1f5f9;
+  z-index: 2;
+  border-bottom: 1.5px solid #cbd5e1;
+}
+
+.dual-table th {
+  padding: 9px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.dual-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.1s, color 0.1s;
+}
+
+.dual-table tbody tr:hover {
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.dual-table tbody tr.active-row {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.dual-table tbody tr.active-row td {
+  color: #ffffff !important;
+}
+
+.dual-table td {
+  padding: 8px 12px;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.dual-table td.cell-id {
+  font-family: monospace;
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+}
+
+.dual-table td.cell-name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.dual-table td.cell-stock {
+  text-align: center;
+}
+
+.dual-table td.cell-rate {
+  text-align: right;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.stock-tag-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.stock-tag-pill.empty {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-color: #e2e8f0;
+}
+
+.btn-remove-basket-row {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.btn-remove-basket-row:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.catalog-table-footer {
+  padding: 8px 14px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Footer de la Canasta (Totales y Despacho) */
+.basket-panel-footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.basket-totals-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 14px;
+}
+
+.basket-total-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.b-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.b-val {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.b-val.text-blue {
+  color: #0284c7;
+}
+
+.b-val.text-green {
+  color: #16a34a;
+}
+
+.btn-dispatch-order {
+  width: 100%;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-dispatch-order:hover {
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-dispatch-order:active {
+  transform: translateY(0);
+}
+
+.dispatch-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.dispatch-text-box {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+}
+
+.dispatch-title {
+  font-size: 14px;
+  font-weight: 800;
+  display: block;
+}
+
+.dispatch-sub {
+  font-size: 11px;
+  opacity: 0.88;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dispatch-kbd {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 5px;
+  font-size: 10px;
+  padding: 3px 7px;
+  font-weight: 800;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+/* 3. Popup Minimalista: CONTROL DE BLANCOS */
+.modal-control-blancos {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35) !important;
+  border: 1px solid #cbd5e1 !important;
+  max-width: 400px !important;
+  overflow: hidden;
+}
+
+.modal-cb-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-cb-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-cb-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.3px;
+}
+
+.modal-cb-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-cb-close:hover {
+  color: #0f172a;
+}
+
+.modal-cb-body {
+  padding: 18px 20px;
+}
+
+.modal-cb-prompt-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  margin: 0 0 6px 0;
+}
+
+.modal-cb-prenda-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.cb-prenda-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0284c7;
+}
+
+.cb-stock-tag {
+  font-size: 11px;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #059669;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.cb-rate-tag {
+  font-size: 11px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.modal-cb-input-wrap {
+  margin: 10px 0 14px 0;
+}
+
+.modal-cb-input {
+  width: 100%;
+  height: 48px;
+  border-radius: 10px;
+  border: 2px solid #0284c7;
+  font-size: 26px;
+  font-weight: 900;
+  text-align: center;
+  color: #0f172a;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  background: #ffffff;
+}
+
+.modal-cb-input::-webkit-outer-spin-button,
+.modal-cb-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.modal-cb-input {
+  -moz-appearance: textfield;
+}
+
+.modal-cb-subtotal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 12px;
+}
+
+.cb-subtotal-lbl {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #166534;
+}
+
+.cb-subtotal-val {
+  font-size: 15px;
+  font-weight: 800;
+  color: #15803d;
+}
+
+.modal-cb-footer {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-cb-cancel {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #475569;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-cb-cancel:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.btn-cb-submit {
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+
+.btn-cb-submit:hover {
+  background: #0369a1;
+}
+
+.cb-kbd {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 1px 5px;
+  font-family: inherit;
+}
+
+/* 4. Monitor Inferior */
+.bottom-monitor-section {
+  width: 100% !important;
+  margin-top: 16px;
+}
+
+@media (max-width: 950px) {
+  .asignador-top-bar {
+    grid-template-columns: 1fr;
+  }
+  .dual-grid-body {
+    grid-template-columns: 1fr;
+  }
+  .dual-panel {
+    height: 420px;
+  }
+}

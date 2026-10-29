@@ -1,6 +1,6 @@
 /**
- * Módulo de Tareas y Asignación Operativa (Diseño Stitch)
- * Jardines Lavandería - Flujo Guiado en 3 Pasos y Monitor en Tiempo Real
+ * Módulo de Tareas y Asignación Operativa (Diseño Dual-Grid de Alta Velocidad)
+ * Jardines Lavandería - Flujo de 2 Columnas Side-by-Side tipo Escritorio
  * Módulo ES6 con compatibilidad global
  */
 
@@ -23,14 +23,24 @@ import { updateProcesoStatusBar } from './procesos.js';
 
 // Estado local del módulo
 let prendasTarea = [];
+let canastaPrendas = [];
 let prendasCatalogoTarea = [];
+let prendasStockCache = {};
 let prendaSeleccionadaTarea = null;
 let trabajadorSeleccionadoTarea = null;
-let procesoSeleccionadoTarea = '';
+let procesoSeleccionadoTarea = 'remojo';
 let stockDisponibleActual = 0;
 let trabajadoresCache = [];
 let trabajadoresInternosCache = [];
 let completarContext = null;
+let prendaModalContext = null;
+let filaCatalogoActivaIndex = -1;
+
+function getActiveToken() {
+  const token = window.token || localStorage.getItem('token');
+  if (token && !window.token) window.token = token;
+  return token;
+}
 
 const PROCESO_COLORES = {
   remojo: '#f59e0b',
@@ -64,9 +74,6 @@ const PROCESO_ORIGEN_MAP = {
   planchado: 'limpio'
 };
 
-/**
- * Obtiene iniciales de un nombre para el avatar
- */
 function getInitials(name) {
   if (!name) return 'OP';
   const parts = name.trim().split(/\s+/);
@@ -74,9 +81,6 @@ function getInitials(name) {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-/**
- * Calcula el tiempo transcurrido desde la creación/asignación
- */
 function calculateElapsedTime(dateStr) {
   if (!dateStr) return 'Reciente';
   const created = new Date(dateStr);
@@ -93,70 +97,627 @@ function calculateElapsedTime(dateStr) {
 }
 
 /**
- * Actualiza el indicador de pasos y las barras de progreso
+ * Calcula la tarifa por prenda según proceso y condición del operario (factura o normal)
  */
-export function updateStepperProgress() {
-  const step1Done = Boolean(trabajadorSeleccionadoTarea);
-  const step2Done = Boolean(procesoSeleccionadoTarea);
-  const step3Done = Boolean(prendaSeleccionadaTarea && parseInt(document.getElementById('cantidadPrenda')?.value, 10) > 0);
+export function calcularTarifaPrenda(prenda, proceso, trabajador) {
+  if (!prenda || !proceso) return 0;
+  const esFactura = Boolean(trabajador && (trabajador.factura === 1 || trabajador.factura === true || trabajador.factura === '1'));
+  if (esFactura) {
+    const key = `precio_${proceso}_factura`;
+    const val = prenda[key];
+    if (val !== undefined && val !== null && val !== '') return Number(val);
+  }
+  const keyNormal = `precio_${proceso}`;
+  const valNormal = prenda[keyNormal];
+  return Number(valNormal || 0);
+}
 
-  const bar1 = document.getElementById('stepBar1');
-  const bar2 = document.getElementById('stepBar2');
-  const bar3 = document.getElementById('stepBar3');
-  const indicator = document.getElementById('taskStepIndicator');
+/**
+ * Obtiene el stock en tiempo real de una prenda para la etapa de origen del proceso actual
+ */
+export function obtenerStockPrendaEtapa(prendaId, proceso) {
+  const origen = PROCESO_ORIGEN_MAP[proceso] || 'sucio';
+  const key = `${prendaId}_${origen}`;
+  return Number(prendasStockCache[key] || 0);
+}
 
-  if (bar1) bar1.className = 'task-stepper-bar active';
-  if (bar2) bar2.className = `task-stepper-bar ${step1Done ? 'active' : ''}`;
-  if (bar3) bar3.className = `task-stepper-bar ${step1Done && step2Done ? 'active' : ''}`;
+/**
+ * Carga todo el stock del inventario en caché para filtrado instantáneo sin latencia
+ */
+export async function cargarStockInventario() {
+  try {
+    const token = getActiveToken();
+    const res = await fetch(`${API}/prendas/stock`, {
+      headers: { 'x-access-token': token }
+    });
+    const data = await res.json();
+    prendasStockCache = {};
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        const key = `${item.id}_${item.proceso}`;
+        prendasStockCache[key] = Number(item.cantidad || 0);
+      });
+    }
+  } catch (err) {
+    console.error('Error cargando stock de inventario:', err);
+  }
+}
 
-  if (indicator) {
-    if (!step1Done) {
-      indicator.textContent = 'Paso 1 de 3: Selecciona Operario';
-    } else if (!step2Done) {
-      indicator.textContent = 'Paso 2 de 3: Selecciona Proceso';
-    } else if (!step3Done) {
-      indicator.textContent = 'Paso 3 de 3: Selecciona Prenda';
-    } else {
-      indicator.textContent = '¡Todo Listo para Asignar!';
+/**
+ * Renderiza la tabla continua del catálogo de prendas (Panel Izquierdo)
+ */
+export function renderCatalogoPrendas() {
+  const tbody = document.getElementById('catalogTableBody');
+  const countBadge = document.getElementById('catalogCountBadge');
+  const searchInput = document.getElementById('buscarPrenda');
+  const checkSoloStock = document.getElementById('checkSoloConStock');
+
+  if (!tbody) return;
+
+  const query = (searchInput?.value || '').trim().toLowerCase();
+  const soloStock = Boolean(checkSoloStock?.checked);
+  const proceso = procesoSeleccionadoTarea || 'remojo';
+
+  let filtradas = (prendasCatalogoTarea || []).filter(p => {
+    if (query) {
+      const matchName = (p.nombre || '').toLowerCase().includes(query);
+      const matchId = String(p.id).includes(query);
+      if (!matchName && !matchId) return false;
+    }
+    const stock = obtenerStockPrendaEtapa(p.id, proceso);
+    if (soloStock && stock <= 0) return false;
+    return true;
+  });
+
+  // Ordenar: primero las que tienen stock disponible
+  filtradas.sort((a, b) => {
+    const stockA = obtenerStockPrendaEtapa(a.id, proceso);
+    const stockB = obtenerStockPrendaEtapa(b.id, proceso);
+    if (stockA > 0 && stockB <= 0) return -1;
+    if (stockB > 0 && stockA <= 0) return 1;
+    return (a.nombre || '').localeCompare(b.nombre || '');
+  });
+
+  if (countBadge) {
+    countBadge.textContent = `${filtradas.length} prendas`;
+  }
+
+  if (!filtradas.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 36px 12px; color: #94a3b8;">
+          <span class="mi" style="font-size: 32px; display: block; margin-bottom: 6px; color: #cbd5e1;">search_off</span>
+          No se encontraron prendas con ese criterio o en esta etapa
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtradas.map((p, idx) => {
+    const stock = obtenerStockPrendaEtapa(p.id, proceso);
+    const tarifa = calcularTarifaPrenda(p, proceso, trabajadorSeleccionadoTarea);
+    const isActive = idx === filaCatalogoActivaIndex;
+
+    return `
+      <tr class="${isActive ? 'active-row' : ''}" data-prenda-id="${p.id}" onclick="abrirCantidadPrendaDirecta(${p.id})">
+        <td class="cell-id">#${p.id}</td>
+        <td class="cell-name" title="${p.nombre}">${p.nombre}</td>
+        <td class="cell-stock">
+          <span class="stock-tag-pill ${stock > 0 ? '' : 'empty'}">${stock} pzs</span>
+        </td>
+        <td class="cell-rate">Q ${tarifa.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/**
+ * Filtra el catálogo de prendas según la búsqueda y el filtro de stock
+ */
+export function filtrarCatalogoPrendas() {
+  filaCatalogoActivaIndex = 0;
+  renderCatalogoPrendas();
+}
+
+/**
+ * Limpia el campo de búsqueda de prendas y devuelve el foco
+ */
+export function limpiarBuscadorPrendas() {
+  const input = document.getElementById('buscarPrenda');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+  filtrarCatalogoPrendas();
+}
+
+/**
+ * Abre el diálogo de ingreso de cantidad (CONTROL DE BLANCOS) para una prenda específica
+ */
+export async function abrirCantidadPrendaDirecta(prendaId) {
+  if (!trabajadorSeleccionadoTarea) {
+    showWarning('Selecciona primero la persona encargada en la barra superior');
+    focusField('tareaTrabajador', 'Selecciona operario');
+    return;
+  }
+
+  const prenda = (prendasCatalogoTarea || []).find(p => Number(p.id) === Number(prendaId));
+  if (!prenda) return;
+
+  const proceso = procesoSeleccionadoTarea || 'remojo';
+  const tarifa = calcularTarifaPrenda(prenda, proceso, trabajadorSeleccionadoTarea);
+
+  // Consultar trazabilidad de stock en tiempo real
+  let stockDisp = obtenerStockPrendaEtapa(prenda.id, proceso);
+  try {
+    const token = getActiveToken();
+    const res = await fetch(`${API}/prendas/${prenda.id}/stock-trazabilidad`, {
+      headers: { 'x-access-token': token }
+    });
+    const stockData = await res.json();
+    const origen = PROCESO_ORIGEN_MAP[proceso] || 'sucio';
+    const enOrigen = (Array.isArray(stockData) ? stockData : []).filter(s => s.proceso === origen);
+    stockDisp = enOrigen.reduce((sum, s) => sum + s.cantidad, 0);
+    // Actualizar caché local
+    prendasStockCache[`${prenda.id}_${origen}`] = stockDisp;
+  } catch (err) {
+    console.error('Error consultando stock en vivo:', err);
+  }
+
+  abrirModalCantidadRapida(prenda, stockDisp, tarifa);
+}
+
+/**
+ * Abre el Modal InputBox: CONTROL DE BLANCOS con autofocus
+ */
+export function abrirModalCantidadRapida(prenda, stockDisp, tarifa) {
+  prendaModalContext = { prenda, stockDisp, tarifa };
+
+  const modal = document.getElementById('modalCantidadRapidaPrenda');
+  const prendaNombre = document.getElementById('modalCantidadPrendaNombre');
+  const stockTag = document.getElementById('modalCantidadStockTag');
+  const tarifaTag = document.getElementById('modalCantidadTarifaTag');
+  const inputCant = document.getElementById('inputCantidadRapidaPrenda');
+
+  const procNombre = PROCESO_NOMBRES[procesoSeleccionadoTarea] || (procesoSeleccionadoTarea || '').toUpperCase();
+  const origen = (PROCESO_ORIGEN_MAP[procesoSeleccionadoTarea] || 'sucio').toUpperCase();
+
+  if (prendaNombre) prendaNombre.textContent = prenda.nombre;
+  if (stockTag) stockTag.textContent = `Disponible en ${origen}: ${stockDisp} piezas`;
+  if (tarifaTag) tarifaTag.textContent = `Q ${Number(tarifa || 0).toFixed(2)} / pza`;
+
+  if (inputCant) {
+    inputCant.removeAttribute('max');
+    inputCant.value = stockDisp > 0 ? '1' : '0';
+  }
+
+  if (stockDisp <= 0) {
+    mostrarAlertaModal('Sin existencias disponibles', `No hay piezas de esta prenda en ${origen} para ${procNombre}`);
+  } else {
+    ocultarAlertaModal();
+  }
+
+  actualizarSubtotalModalEnVivo();
+
+  if (modal) modal.classList.add('show');
+
+  // Autofocus inmediato con selección total de texto
+  setTimeout(() => {
+    if (inputCant) {
+      inputCant.focus();
+      inputCant.select();
+    }
+  }, 40);
+}
+
+/**
+ * Cierra el modal rápido y transfiere el foco al buscador de prendas
+ */
+export function cerrarModalCantidadRapida() {
+  const modal = document.getElementById('modalCantidadRapidaPrenda');
+  if (modal) modal.classList.remove('show');
+  prendaModalContext = null;
+  ocultarAlertaModal();
+
+  setTimeout(() => {
+    const bPrenda = document.getElementById('buscarPrenda');
+    if (bPrenda) {
+      bPrenda.value = '';
+      bPrenda.focus();
+    }
+    renderCatalogoPrendas();
+  }, 30);
+}
+
+export function cerrarModalCantidadRapidaPorBackdrop(e) {
+  if (e && e.target && e.target.id === 'modalCantidadRapidaPrenda') {
+    cerrarModalCantidadRapida();
+  }
+}
+
+export function mostrarAlertaModal(titulo, desc) {
+  const alertBox = document.getElementById('modalCantidadAlertBox');
+  const titleEl = document.getElementById('modalCantidadAlertTitle');
+  const descEl = document.getElementById('modalCantidadAlertDesc');
+  const inputCant = document.getElementById('inputCantidadRapidaPrenda');
+  const confirmBtn = document.getElementById('btnConfirmarCantidadModal');
+
+  if (titleEl) titleEl.textContent = titulo;
+  if (descEl) descEl.textContent = desc;
+
+  if (alertBox) {
+    alertBox.style.display = 'flex';
+    alertBox.style.animation = 'none';
+    void alertBox.offsetWidth;
+    alertBox.style.animation = 'qinputAlertShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both';
+  }
+
+  if (inputCant) {
+    inputCant.style.borderColor = '#ef4444';
+    inputCant.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+  }
+
+  if (confirmBtn) {
+    confirmBtn.style.opacity = '0.55';
+  }
+}
+
+export function ocultarAlertaModal() {
+  const alertBox = document.getElementById('modalCantidadAlertBox');
+  const inputCant = document.getElementById('inputCantidadRapidaPrenda');
+  const confirmBtn = document.getElementById('btnConfirmarCantidadModal');
+
+  if (alertBox) alertBox.style.display = 'none';
+
+  if (inputCant) {
+    inputCant.style.borderColor = '#0284c7';
+    inputCant.style.boxShadow = '';
+  }
+
+  if (confirmBtn) {
+    confirmBtn.style.opacity = '1';
+  }
+}
+
+export function actualizarSubtotalModalEnVivo() {
+  if (!prendaModalContext) return;
+  const input = document.getElementById('inputCantidadRapidaPrenda');
+  const subtotalEl = document.getElementById('modalSubtotalEstimado');
+  const cant = parseInt(input?.value, 10) || 0;
+  const tarifa = Number(prendaModalContext.tarifa || 0);
+  const subtotal = cant * tarifa;
+
+  if (subtotalEl) subtotalEl.textContent = `Q ${subtotal.toFixed(2)}`;
+
+  const origen = (PROCESO_ORIGEN_MAP[procesoSeleccionadoTarea] || 'sucio').toUpperCase();
+  const stockDisp = prendaModalContext.stockDisp;
+
+  if (cant <= 0) {
+    mostrarAlertaModal('Cantidad requerida', 'Ingresa una cantidad mayor a 0');
+  } else if (cant > stockDisp) {
+    mostrarAlertaModal('Stock insuficiente', `Solo hay ${stockDisp} piezas disponibles en ${origen} (solicitadas: ${cant})`);
+  } else {
+    ocultarAlertaModal();
+  }
+}
+
+/**
+ * Confirma la cantidad en CONTROL DE BLANCOS y agrega a la tabla de la derecha
+ */
+export function confirmarCantidadRapidaModal(e) {
+  if (e) e.preventDefault();
+  if (!prendaModalContext) return;
+
+  const { prenda, stockDisp, tarifa } = prendaModalContext;
+  const inputCant = document.getElementById('inputCantidadRapidaPrenda');
+  const cant = parseInt(inputCant?.value, 10) || 0;
+  const origen = (PROCESO_ORIGEN_MAP[procesoSeleccionadoTarea] || 'sucio').toUpperCase();
+
+  if (cant <= 0) {
+    mostrarAlertaModal('Cantidad requerida', 'Ingresa una cantidad mayor a 0 piezas');
+    inputCant?.focus();
+    inputCant?.select();
+    return;
+  }
+
+  const existenteIndex = canastaPrendas.findIndex(p => p.prenda_id === prenda.id);
+  const cantPrevia = existenteIndex !== -1 ? canastaPrendas[existenteIndex].cantidad : 0;
+  const cantTotal = cantPrevia + cant;
+
+  if (cantTotal > stockDisp) {
+    mostrarAlertaModal('Stock insuficiente', `Solo hay ${stockDisp} piezas en ${origen} (acumulado solicitado: ${cantTotal})`);
+    inputCant?.focus();
+    inputCant?.select();
+    return;
+  }
+
+  if (existenteIndex !== -1) {
+    canastaPrendas[existenteIndex].cantidad = cantTotal;
+    canastaPrendas[existenteIndex].stockDisponible = stockDisp;
+    canastaPrendas[existenteIndex].subtotal = cantTotal * tarifa;
+  } else {
+    canastaPrendas.push({
+      prenda_id: prenda.id,
+      nombre: prenda.nombre,
+      cantidad: cant,
+      stockDisponible: stockDisp,
+      tarifa: tarifa,
+      subtotal: cant * tarifa
+    });
+  }
+
+  cerrarModalCantidadRapida();
+  renderCanastaPrendas();
+  showInfo(`Agregado a la orden: ${cant}x ${prenda.nombre}`);
+}
+
+/**
+ * Renderiza la tabla de prendas asignadas (Panel Derecho)
+ */
+export function renderCanastaPrendas() {
+  const tbody = document.getElementById('basketTableBody');
+  const countBadge = document.getElementById('basketCountBadge');
+  const statTipos = document.getElementById('basketStatTipos');
+  const statPiezas = document.getElementById('basketStatPiezas');
+  const statTotalQ = document.getElementById('basketStatTotalQ');
+  const btnSummary = document.getElementById('btnAsignarSummary');
+  const dispatchBtn = document.getElementById('btnAsignarTareaMain');
+
+  if (countBadge) countBadge.textContent = `${canastaPrendas.length} asignadas`;
+
+  if (!canastaPrendas.length) {
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 40px 12px; color: #94a3b8;">
+            <span class="mi" style="font-size: 32px; display: block; margin-bottom: 6px; color: #cbd5e1;">layers_clear</span>
+            No hay prendas en la orden todavía.<br>
+            <span style="font-size: 11px;">Elige una prenda en la tabla de la izquierda para agregarla.</span>
+          </td>
+        </tr>
+      `;
+    }
+    if (statTipos) statTipos.textContent = '0 tipos';
+    if (statPiezas) statPiezas.textContent = '0 pzs';
+    if (statTotalQ) statTotalQ.textContent = 'Q 0.00';
+    if (btnSummary) btnSummary.textContent = 'Sin prendas en la orden';
+    if (dispatchBtn) dispatchBtn.style.opacity = '0.7';
+    return;
+  }
+
+  const totalPiezas = canastaPrendas.reduce((sum, item) => sum + item.cantidad, 0);
+  const totalDestajo = canastaPrendas.reduce((sum, item) => sum + (item.subtotal || 0), 0);
+
+  if (statTipos) statTipos.textContent = `${canastaPrendas.length} ${canastaPrendas.length === 1 ? 'tipo' : 'tipos'}`;
+  if (statPiezas) statPiezas.textContent = `${totalPiezas} pzs`;
+  if (statTotalQ) statTotalQ.textContent = `Q ${totalDestajo.toFixed(2)}`;
+
+  const trabNombre = trabajadorSeleccionadoTarea ? trabajadorSeleccionadoTarea.nombre : 'Operario';
+  const procNombre = PROCESO_NOMBRES[procesoSeleccionadoTarea] || procesoSeleccionadoTarea;
+
+  if (btnSummary) {
+    btnSummary.textContent = `${trabNombre} • ${procNombre} • ${totalPiezas} pzs • Total Q ${totalDestajo.toFixed(2)}`;
+  }
+  if (dispatchBtn) dispatchBtn.style.opacity = '1';
+
+  if (tbody) {
+    tbody.innerHTML = canastaPrendas.map((item, idx) => `
+      <tr>
+        <td style="text-align: center; font-weight: 800; color: #0284c7; font-size: 13px;">${item.cantidad}</td>
+        <td class="cell-id">#${item.prenda_id}</td>
+        <td class="cell-name" title="${item.nombre}">${item.nombre}</td>
+        <td class="cell-rate">Q ${Number(item.tarifa || 0).toFixed(2)}</td>
+        <td style="text-align: right; font-weight: 800; color: #16a34a;">Q ${Number(item.subtotal || 0).toFixed(2)}</td>
+        <td style="text-align: center;">
+          <button type="button" class="btn-remove-basket-row" onclick="eliminarPrendaCanasta(${idx})" title="Quitar de la orden">
+            <span class="mi" style="font-size: 15px;">close</span>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+/**
+ * Quita una prenda de la canasta
+ */
+export function eliminarPrendaCanasta(idx) {
+  if (idx >= 0 && idx < canastaPrendas.length) {
+    const eliminada = canastaPrendas[idx];
+    canastaPrendas.splice(idx, 1);
+    renderCanastaPrendas();
+    showInfo(`Eliminado de la orden: ${eliminada.nombre}`);
+  }
+}
+
+/**
+ * Limpia la canasta completa
+ */
+export function limpiarCanasta() {
+  canastaPrendas = [];
+  renderCanastaPrendas();
+  showInfo('Orden limpiada');
+}
+
+/**
+ * Cambia el operario desde el dropdown superior
+ */
+export function seleccionarTrabajadorDropdown(id) {
+  const trab = (trabajadoresCache || []).find(t => Number(t.id) === Number(id));
+  trabajadorSeleccionadoTarea = trab || null;
+
+  // Actualizar tarifas de prendas en la canasta si ya hay
+  if (trabajadorSeleccionadoTarea && canastaPrendas.length > 0) {
+    canastaPrendas.forEach(item => {
+      const p = (prendasCatalogoTarea || []).find(x => Number(x.id) === Number(item.prenda_id));
+      if (p) {
+        item.tarifa = calcularTarifaPrenda(p, procesoSeleccionadoTarea, trabajadorSeleccionadoTarea);
+        item.subtotal = item.cantidad * item.tarifa;
+      }
+    });
+  }
+
+  renderCatalogoPrendas();
+  renderCanastaPrendas();
+}
+
+/**
+ * Cambia el proceso desde el dropdown superior
+ */
+export function seleccionarProcesoDropdown(proceso) {
+  procesoSeleccionadoTarea = proceso;
+
+  // Actualizar tarifas de prendas en la canasta si ya hay
+  if (canastaPrendas.length > 0) {
+    canastaPrendas.forEach(item => {
+      const p = (prendasCatalogoTarea || []).find(x => Number(x.id) === Number(item.prenda_id));
+      if (p) {
+        item.tarifa = calcularTarifaPrenda(p, procesoSeleccionadoTarea, trabajadorSeleccionadoTarea);
+        item.subtotal = item.cantidad * item.tarifa;
+      }
+    });
+  }
+
+  renderCatalogoPrendas();
+  renderCanastaPrendas();
+}
+
+/**
+ * Teclas en el buscador: Enter o Flechas para abrir CONTROL DE BLANCOS
+ */
+export function onBuscarPrendaKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const rows = document.querySelectorAll('#catalogTableBody tr[data-prenda-id]');
+    if (rows && rows.length > 0) {
+      const targetRow = rows[filaCatalogoActivaIndex] || rows[0];
+      targetRow.click();
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const rows = document.querySelectorAll('#catalogTableBody tr[data-prenda-id]');
+    if (rows && rows.length > 0) {
+      filaCatalogoActivaIndex = Math.min(rows.length - 1, filaCatalogoActivaIndex + 1);
+      renderCatalogoPrendas();
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const rows = document.querySelectorAll('#catalogTableBody tr[data-prenda-id]');
+    if (rows && rows.length > 0) {
+      filaCatalogoActivaIndex = Math.max(0, filaCatalogoActivaIndex - 1);
+      renderCatalogoPrendas();
     }
   }
 }
 
 /**
- * Actualiza el micro-resumen en el botón principal de asignación
+ * Configura los atajos de teclado globales (Ctrl+Enter para despachar)
  */
-export function actualizarResumenBotonTarea() {
-  const summaryBox = document.getElementById('btnAsignarSummary');
-  const subText = document.getElementById('btnAsignarSub');
-  const mainBtn = document.getElementById('btnAsignarTareaMain');
+export function setupTecladoDualGrid() {
+  if (!window.tecladoDualGridConfigurado) {
+    window.tecladoDualGridConfigurado = true;
+    window.addEventListener('keydown', (e) => {
+      // Ctrl + Enter: Despachar orden directamente
+      if (e.ctrlKey && e.key === 'Enter') {
+        const modal = document.getElementById('modalCantidadRapidaPrenda');
+        if (!modal || !modal.classList.contains('show')) {
+          e.preventDefault();
+          crearTareaDirecta();
+        }
+      } else if (e.key === 'Escape') {
+        const modal = document.getElementById('modalCantidadRapidaPrenda');
+        if (modal && modal.classList.contains('show')) {
+          e.preventDefault();
+          cerrarModalCantidadRapida();
+        }
+      }
+    });
+  }
+}
 
-  const trabNombre = trabajadorSeleccionadoTarea ? trabajadorSeleccionadoTarea.nombre : null;
-  const procNombre = procesoSeleccionadoTarea ? PROCESO_NOMBRES[procesoSeleccionadoTarea] || procesoSeleccionadoTarea : null;
-  const prendaNombre = prendaSeleccionadaTarea ? prendaSeleccionadaTarea.nombre : null;
-  const cant = parseInt(document.getElementById('cantidadPrenda')?.value, 10) || 1;
+/**
+ * Despacho atómico de la orden de tareas a producción
+ */
+export async function crearTareaDirecta() {
+  clearFieldErrors();
 
-  if (trabNombre && procNombre && prendaNombre) {
-    if (summaryBox) summaryBox.textContent = `${trabNombre} • ${procNombre} • ${cant}x ${prendaNombre}`;
-    if (subText) subText.textContent = `Listo para enviar la orden a producción`;
-    if (mainBtn) mainBtn.style.opacity = '1';
-  } else {
-    const faltantes = [];
-    if (!trabNombre) faltantes.push('Operario');
-    if (!procNombre) faltantes.push('Proceso');
-    if (!prendaNombre) faltantes.push('Prenda');
-
-    if (summaryBox) summaryBox.textContent = `Falta: ${faltantes.join(', ')}`;
-    if (subText) subText.textContent = `Completa los 3 pasos para despachar la orden`;
+  if (!trabajadorSeleccionadoTarea) {
+    showWarning('Selecciona la persona encargada en la barra superior');
+    focusField('tareaTrabajador', 'Selecciona operario');
+    return;
   }
 
-  updateStepperProgress();
+  const proceso = procesoSeleccionadoTarea || 'remojo';
+
+  if (canastaPrendas.length === 0) {
+    showWarning('Agrega al menos una prenda a la orden para despachar');
+    focusField('buscarPrenda', 'Buscar prenda');
+    return;
+  }
+
+  const hoy = new Date().toISOString().slice(0, 10);
+
+  try {
+    const payload = {
+      trabajador_id: Number(trabajadorSeleccionadoTarea.id),
+      proceso,
+      prendas: canastaPrendas.map(p => ({
+        prenda_id: p.prenda_id,
+        cantidad: p.cantidad,
+        nombre: p.nombre
+      })),
+      fecha_asignacion: hoy
+    };
+
+    const token = getActiveToken();
+    const res = await fetch(`${API}/tareas/asignar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-access-token': token },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      const totalPiezas = canastaPrendas.reduce((sum, p) => sum + p.cantidad, 0);
+      showSuccess(`¡Orden de ${totalPiezas} piezas asignada a ${trabajadorSeleccionadoTarea.nombre}!`);
+
+      // Limpiar la canasta
+      canastaPrendas = [];
+      renderCanastaPrendas();
+
+      // Refrescar inventario y monitor en vivo
+      await cargarStockInventario();
+      renderCatalogoPrendas();
+      loadTareasActivas();
+
+      // Devolver foco a buscar prenda
+      setTimeout(() => {
+        const b = document.getElementById('buscarPrenda');
+        if (b) {
+          b.value = '';
+          b.focus();
+        }
+      }, 50);
+    } else {
+      const errorMsg = data.errores ? data.errores.map(e => e.error).join('\n') : (data.message || 'Error al asignar tarea');
+      showError(errorMsg);
+    }
+  } catch (err) {
+    console.error('Error al despachar orden:', err);
+    showError('Error de red al despachar la tarea');
+  }
 }
 
 /**
  * Carga principal del módulo y datos iniciales
  */
 export async function loadTareasForm() {
-  const token = window.token;
+  const token = getActiveToken();
+  if (!token) {
+    console.warn('loadTareasForm: esperando token de autenticación...');
+    return;
+  }
   try {
     const res = await fetch(`${API}/trabajadores`, { headers: { 'x-access-token': token } });
     const data = await res.json();
@@ -166,20 +727,34 @@ export async function loadTareasForm() {
     const dataInternos = await resInternos.json();
     trabajadoresInternosCache = Array.isArray(dataInternos) ? dataInternos : [];
 
-    // Renderizar tarjetas de trabajadores en el Paso 1
-    renderTrabajadoresCards(trabajadoresCache);
+    // Llenar select de trabajadores en la barra superior
+    const selectTrab = document.getElementById('tareaTrabajador');
+    if (selectTrab) {
+      selectTrab.innerHTML = '<option value="">Selecciona persona encargada...</option>' +
+        trabajadoresCache.map(t => `<option value="${t.id}">${t.nombre} ${t.factura ? ' (Factura)' : ''}</option>`).join('');
 
-    // Inicializar filtros
+      // Conservar el seleccionado o tomar el primero
+      if (!trabajadorSeleccionadoTarea && trabajadoresCache.length > 0) {
+        trabajadorSeleccionadoTarea = trabajadoresCache[0];
+        selectTrab.value = trabajadorSeleccionadoTarea.id;
+      } else if (trabajadorSeleccionadoTarea) {
+        selectTrab.value = trabajadorSeleccionadoTarea.id;
+      }
+    }
+
+    // Filtro del monitor inferior
     const filtroTrab = document.getElementById('filtroTareasTrabajador');
     if (filtroTrab) {
       filtroTrab.innerHTML = '<option value="">Todos los operarios</option>' +
         trabajadoresCache.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
     }
 
-    // Fecha predeterminada
-    const hoy = new Date().toISOString().slice(0, 10);
-    const fechaInput = document.getElementById('tareaFecha');
-    if (fechaInput) fechaInput.value = hoy;
+    // Proceso por defecto
+    const selectProc = document.getElementById('tareaProceso');
+    if (selectProc) {
+      if (!procesoSeleccionadoTarea) procesoSeleccionadoTarea = 'remojo';
+      selectProc.value = procesoSeleccionadoTarea;
+    }
 
     // Catálogo de prendas
     const resPrendas = await fetch(`${API}/prendas`, { headers: { 'x-access-token': token } });
@@ -187,459 +762,38 @@ export async function loadTareasForm() {
     prendasCatalogoTarea = Array.isArray(dataPrendas) ? dataPrendas : [];
     window.prendasCacheGlobal = prendasCatalogoTarea.slice();
 
-    // Resetear selecciones
-    trabajadorSeleccionadoTarea = null;
-    procesoSeleccionadoTarea = '';
-    prendaSeleccionadaTarea = null;
-    stockDisponibleActual = 0;
+    // Cargar stock global
+    await cargarStockInventario();
 
-    const trabInput = document.getElementById('tareaTrabajador');
-    if (trabInput) trabInput.value = '';
-    const bTrabInput = document.getElementById('buscarTrabajadorTarea');
-    if (bTrabInput) bTrabInput.value = '';
-    const procInput = document.getElementById('tareaProceso');
-    if (procInput) procInput.value = '';
-    const bPrendaInput = document.getElementById('buscarPrenda');
-    if (bPrendaInput) bPrendaInput.value = '';
+    // Renderizar ambas tablas
+    renderCatalogoPrendas();
+    renderCanastaPrendas();
 
-    const selectedWorkerBadge = document.getElementById('selectedWorkerBadge');
-    if (selectedWorkerBadge) selectedWorkerBadge.style.display = 'none';
-
-    const selectedProcessBadge = document.getElementById('selectedProcessBadge');
-    if (selectedProcessBadge) selectedProcessBadge.textContent = 'Sin seleccionar';
-
-    const selectedStockTag = document.getElementById('selectedStockTag');
-    if (selectedStockTag) selectedStockTag.style.display = 'none';
-
-    // Deseleccionar tarjetas de proceso
-    ['procBtnRemojo', 'procBtnLavado', 'procBtnDesmanche', 'procBtnPlanchado'].forEach(id => {
-      document.getElementById(id)?.classList.remove('selected');
-    });
-
+    // Cargar monitor inferior
     loadTareasActivas();
-    actualizarResumenBotonTarea();
-    updateStepperProgress();
+
+    // Atajos de teclado
+    setupTecladoDualGrid();
+
+    // Foco inmediato en el buscador de prendas
+    setTimeout(() => {
+      const bPrenda = document.getElementById('buscarPrenda');
+      if (bPrenda) bPrenda.focus();
+    }, 60);
+
   } catch (err) {
     console.error('Error cargando formulario de tareas:', err);
   }
 }
 
-/**
- * Renderiza la cuadrícula de tarjetas de operarios
- */
-export function renderTrabajadoresCards(lista) {
-  const container = document.getElementById('workersCardsGrid');
-  if (!container) return;
-
-  if (!Array.isArray(lista) || lista.length === 0) {
-    container.innerHTML = '<div style="grid-column:1/-1; padding:12px; color:#94a3b8; text-align:center; font-size:12px;">No se encontraron operarios</div>';
-    return;
-  }
-
-  container.innerHTML = lista.map(t => {
-    const isSelected = trabajadorSeleccionadoTarea && trabajadorSeleccionadoTarea.id === t.id;
-    const safeNombre = String(t.nombre).replace(/'/g, "\\'");
-    const initials = getInitials(t.nombre);
-
-    return `
-      <div class="worker-card-item ${isSelected ? 'selected' : ''}" id="workerCard_${t.id}" onclick="seleccionarTrabajadorCard(${t.id}, '${safeNombre}')">
-        <div class="worker-avatar">
-          ${initials}
-          <span class="worker-status-dot"></span>
-        </div>
-        <div class="worker-name" title="${t.nombre}">${t.nombre}</div>
-        <span class="worker-status-tag worker-tag-free">${t.factura ? 'Factura' : 'Disponible'}</span>
-        <div class="worker-check-icon"><span class="mi">check</span></div>
-      </div>
-    `;
-  }).join('');
-}
-
-/**
- * Filtra las tarjetas de operarios en tiempo real
- */
-export function filtrarTrabajadoresCards() {
-  const query = (document.getElementById('buscarTrabajadorTarea')?.value || '').trim().toLowerCase();
-  const filtrados = (trabajadoresCache || []).filter(t => !query || (t.nombre || '').toLowerCase().includes(query));
-  renderTrabajadoresCards(filtrados);
-
-  // Si se limpió el buscador o ya no coincide el seleccionado
-  if (trabajadorSeleccionadoTarea && query && !trabajadorSeleccionadoTarea.nombre.toLowerCase().includes(query)) {
-    // Mantener la selección pero el grid refleja la búsqueda
-  }
-}
-
-/**
- * Compatibilidad con búsqueda anterior de trabajadores
- */
-export function buscarTrabajadoresTarea() {
-  filtrarTrabajadoresCards();
-}
-
-/**
- * Selecciona un operario desde su tarjeta (Paso 1)
- */
-export function seleccionarTrabajadorCard(id, nombre) {
-  trabajadorSeleccionadoTarea = { id, nombre };
-
-  const inputId = document.getElementById('tareaTrabajador');
-  if (inputId) inputId.value = id;
-
-  const inputNombre = document.getElementById('buscarTrabajadorTarea');
-  if (inputNombre) inputNombre.value = nombre;
-
-  // Actualizar clases de selección en todas las tarjetas
-  const allCards = document.querySelectorAll('.worker-card-item');
-  allCards.forEach(c => c.classList.remove('selected'));
-
-  const selectedCard = document.getElementById(`workerCard_${id}`);
-  if (selectedCard) selectedCard.classList.add('selected');
-
-  // Badge de confirmación
-  const badge = document.getElementById('selectedWorkerBadge');
-  const badgeName = document.getElementById('selectedWorkerName');
-  if (badge && badgeName) {
-    badgeName.textContent = nombre;
-    badge.style.display = 'inline-flex';
-  }
-
-  showFieldError('trabajador', false);
-  actualizarResumenBotonTarea();
-}
-
-/**
- * Alias de compatibilidad
- */
-export function seleccionarTrabajadorTarea(id, nombre) {
-  seleccionarTrabajadorCard(id, nombre);
-}
-
-/**
- * Selecciona un proceso de producción (Paso 2)
- */
-export function seleccionarProcesoCard(proceso) {
-  procesoSeleccionadoTarea = proceso;
-
-  const input = document.getElementById('tareaProceso');
-  if (input) input.value = proceso;
-
-  // Actualizar estado visual de los 4 botones
-  ['remojo', 'lavado', 'desmanche', 'planchado'].forEach(p => {
-    const idMap = {
-      remojo: 'procBtnRemojo',
-      lavado: 'procBtnLavado',
-      desmanche: 'procBtnDesmanche',
-      planchado: 'procBtnPlanchado'
-    };
-    const el = document.getElementById(idMap[p]);
-    if (el) {
-      if (p === proceso) el.classList.add('selected');
-      else el.classList.remove('selected');
-    }
-  });
-
-  // Actualizar badge de texto
-  const badge = document.getElementById('selectedProcessBadge');
-  if (badge) {
-    badge.textContent = PROCESO_NOMBRES[proceso] || proceso.toUpperCase();
-    badge.style.color = PROCESO_COLORES[proceso] || '#0284c7';
-  }
-
-  // Si ya había una prenda seleccionada, recalcular su stock para el nuevo proceso
-  if (prendaSeleccionadaTarea) {
-    recalcularStockPrendaSeleccionada(prendaSeleccionadaTarea.id);
-  }
-
-  showFieldError('proceso', false);
-  actualizarResumenBotonTarea();
-}
-
-/**
- * Stepper numérico: sumar o restar cantidad
- */
-export function ajustarCantidadTarea(delta) {
-  const input = document.getElementById('cantidadPrenda');
-  if (!input) return;
-  let val = parseInt(input.value, 10) || 1;
-  val = Math.max(1, val + delta);
-  input.value = val;
-  actualizarResumenBotonTarea();
-}
-
-/**
- * Presets de cantidad (+5, +10, +25)
- */
-export function setCantidadPreset(valor) {
-  const input = document.getElementById('cantidadPrenda');
-  if (!input) return;
-  let val = parseInt(input.value, 10) || 1;
-  if (val === 1) {
-    val = valor;
-  } else {
-    val += valor;
-  }
-  input.value = val;
-  actualizarResumenBotonTarea();
-}
-
-/**
- * Asigna todo el stock disponible actualmente a la cantidad
- */
-export function setCantidadTodoStock() {
-  if (!prendaSeleccionadaTarea) {
-    showWarning('Primero selecciona una prenda del catálogo');
-    document.getElementById('buscarPrenda')?.focus();
-    return;
-  }
-
-  if (stockDisponibleActual <= 0) {
-    showWarning(`No hay stock disponible de ${prendaSeleccionadaTarea.nombre} para este proceso`);
-    return;
-  }
-
-  const input = document.getElementById('cantidadPrenda');
-  if (input) input.value = stockDisponibleActual;
-  showInfo(`Cantidad ajustada a ${stockDisponibleActual} (todo el stock disponible)`);
-  actualizarResumenBotonTarea();
-}
-
-/**
- * Búsqueda de prendas en el catálogo (Paso 3)
- */
-export async function buscarPrendasTarea() {
-  const query = (document.getElementById('buscarPrenda')?.value || '').trim().toLowerCase();
-  const quickBox = document.getElementById('busquedaRapidaTarea');
-  if (!quickBox) return;
-
-  if (query.length === 0) {
-    quickBox.style.display = 'none';
-    quickBox.innerHTML = '';
-    return;
-  }
-
-  const origen = PROCESO_ORIGEN_MAP[procesoSeleccionadoTarea] || 'sucio';
-  const filtradas = (prendasCatalogoTarea || [])
-    .filter(p => p.nombre.toLowerCase().includes(query) || (p.descripcion || '').toLowerCase().includes(query))
-    .slice(0, 15);
-
-  if (!filtradas.length) {
-    quickBox.innerHTML = '<div style="padding:12px; color:#94a3b8; text-align:center; font-size:13px;">No se encontraron prendas con ese nombre</div>';
-  } else {
-    quickBox.innerHTML = filtradas.map(p => {
-      const safeNombre = String(p.nombre).replace(/'/g, "\\'");
-      return `
-        <div class="prenda-option-item" onclick="seleccionarPrendaTarea(${p.id}, '${safeNombre}')">
-          <div>
-            <div style="font-weight:700; color:#0f172a; font-size:13px;">${p.nombre}</div>
-            <div style="font-size:11px; color:#64748b;">Código: #${p.id} • Origen requerido: <strong style="color:#0284c7;">${origen.toUpperCase()}</strong></div>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm" style="min-width:auto; padding:4px 10px; font-size:11px;">
-            <span class="mi" style="font-size:14px;">check</span> Elegir
-          </button>
-        </div>
-      `;
-    }).join('');
-  }
-
-  quickBox.style.display = 'block';
-  showFieldError('prenda', false);
-}
-
-/**
- * Prepara la búsqueda al enfocar el campo de prenda
- */
-export function prepararBusquedaPrendaTarea() {
-  const input = document.getElementById('buscarPrenda');
-  if (input && input.value.trim().length > 0) {
-    buscarPrendasTarea();
-  }
-}
-
-/**
- * Recalcula el stock disponible de la prenda para el proceso actual
- */
-async function recalcularStockPrendaSeleccionada(prendaId) {
-  try {
-    const res = await fetch(`${API}/prendas/${prendaId}/stock-trazabilidad`, {
-      headers: { 'x-access-token': window.token }
-    });
-    const stockData = await res.json();
-    const origen = PROCESO_ORIGEN_MAP[procesoSeleccionadoTarea] || 'sucio';
-
-    const stockEnOrigen = (Array.isArray(stockData) ? stockData : []).filter(s => s.proceso === origen);
-    stockDisponibleActual = stockEnOrigen.reduce((sum, s) => sum + s.cantidad, 0);
-
-    const stockTag = document.getElementById('selectedStockTag');
-    if (stockTag) {
-      stockTag.textContent = `Stock en ${origen.toUpperCase()}: ${stockDisponibleActual}`;
-      stockTag.style.color = stockDisponibleActual > 0 ? '#16a34a' : '#ef4444';
-      stockTag.style.display = 'inline-block';
-    }
-  } catch (err) {
-    console.error('Error recalculando stock:', err);
-  }
-}
-
-/**
- * Selecciona una prenda del buscador (Paso 3)
- */
-export async function seleccionarPrendaTarea(id, nombre) {
-  prendaSeleccionadaTarea = { id, nombre };
-
-  const input = document.getElementById('buscarPrenda');
-  if (input) input.value = nombre;
-
-  const quickBox = document.getElementById('busquedaRapidaTarea');
-  if (quickBox) {
-    quickBox.innerHTML = '';
-    quickBox.style.display = 'none';
-  }
-
-  // Ocultar trazabilidad anterior
-  const stockInfo = document.getElementById('stockInfoPrenda');
-  if (stockInfo) stockInfo.style.display = 'none';
-
-  // Recalcular stock disponible
-  await recalcularStockPrendaSeleccionada(id);
-
-  actualizarResumenBotonTarea();
-}
-
-/**
- * Creación directa de tarea en 1 solo clic (El nuevo flujo simplificado)
- */
-export async function crearTareaDirecta() {
-  clearFieldErrors();
-
-  // 1. Validar Operario
-  let trabajador_id = trabajadorSeleccionadoTarea ? trabajadorSeleccionadoTarea.id : null;
-  const trabajadorInputText = (document.getElementById('buscarTrabajadorTarea')?.value || '').trim();
-
-  if (!trabajador_id && trabajadorInputText) {
-    const exacto = (trabajadoresCache || []).find(t => (t.nombre || '').toLowerCase() === trabajadorInputText.toLowerCase());
-    const parciales = (trabajadoresCache || []).filter(t => (t.nombre || '').toLowerCase().includes(trabajadorInputText.toLowerCase()));
-    const candidato = exacto || (parciales.length === 1 ? parciales[0] : null);
-    if (candidato) {
-      seleccionarTrabajadorCard(candidato.id, candidato.nombre);
-      trabajador_id = candidato.id;
-    }
-  }
-
-  if (!trabajador_id) {
-    showWarning('Paso 1 incompleto: Selecciona un operario para la tarea');
-    focusField('buscarTrabajadorTarea', 'Selecciona un operario');
-    return;
-  }
-
-  // 2. Validar Proceso
-  const proceso = procesoSeleccionadoTarea || document.getElementById('tareaProceso')?.value;
-  if (!proceso) {
-    showWarning('Paso 2 incompleto: Selecciona el proceso a realizar (Remojo, Lavado, Desmanche o Planchado)');
-    return;
-  }
-
-  // 3. Validar Prenda
-  if (!prendaSeleccionadaTarea) {
-    const typedPrenda = (document.getElementById('buscarPrenda')?.value || '').trim();
-    if (typedPrenda) {
-      const candidato = resolverCoincidenciaPorNombre(prendasCatalogoTarea, typedPrenda);
-      if (candidato) {
-        await seleccionarPrendaTarea(candidato.id, candidato.nombre);
-      }
-    }
-  }
-
-  if (!prendaSeleccionadaTarea) {
-    showWarning('Paso 3 incompleto: Selecciona la prenda a procesar');
-    focusField('buscarPrenda', 'Escribe el nombre de la prenda');
-    return;
-  }
-
-  // 4. Validar Cantidad
-  const cantidad = parseInt(document.getElementById('cantidadPrenda')?.value, 10) || 0;
-  if (cantidad < 1) {
-    showWarning('Ingresa una cantidad válida mayor a 0');
-    focusField('cantidadPrenda', 'Cantidad');
-    return;
-  }
-
-  const fecha_asignacion = document.getElementById('tareaFecha')?.value || new Date().toISOString().slice(0, 10);
-
-  // 5. Verificar Stock en tiempo real antes de enviar
-  try {
-    const resStock = await fetch(`${API}/prendas/${prendaSeleccionadaTarea.id}/stock-trazabilidad`, {
-      headers: { 'x-access-token': window.token }
-    });
-    const stockData = await resStock.json();
-
-    const origen = PROCESO_ORIGEN_MAP[proceso] || proceso;
-    const stockEnOrigen = (Array.isArray(stockData) ? stockData : []).filter(s => s.proceso === origen);
-    const totalStock = stockEnOrigen.reduce((sum, s) => sum + s.cantidad, 0);
-
-    if (totalStock < cantidad) {
-      mostrarTrazabilidadStock(prendaSeleccionadaTarea.id, prendaSeleccionadaTarea.nombre, stockData, cantidad);
-      showWarning(`Stock insuficiente: Hay ${totalStock} prendas en ${origen.toUpperCase()} (requeridas: ${cantidad})`);
-      return;
-    }
-
-    // 6. Despachar la asignación de tarea al backend
-    const payload = {
-      trabajador_id: Number(trabajador_id),
-      proceso,
-      prendas: [{
-        prenda_id: prendaSeleccionadaTarea.id,
-        cantidad,
-        nombre: prendaSeleccionadaTarea.nombre
-      }],
-      fecha_asignacion
-    };
-
-    const res = await fetch(`${API}/tareas/asignar`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-access-token': window.token },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      showSuccess(`¡Tarea asignada con éxito a ${trabajadorSeleccionadoTarea.nombre}!`);
-
-      // Limpiar datos de prenda para la siguiente asignación rápida
-      prendaSeleccionadaTarea = null;
-      stockDisponibleActual = 0;
-      const bPrenda = document.getElementById('buscarPrenda');
-      if (bPrenda) bPrenda.value = '';
-      const cantInput = document.getElementById('cantidadPrenda');
-      if (cantInput) cantInput.value = '1';
-
-      const stockTag = document.getElementById('selectedStockTag');
-      if (stockTag) stockTag.style.display = 'none';
-      const stockInfo = document.getElementById('stockInfoPrenda');
-      if (stockInfo) stockInfo.style.display = 'none';
-
-      // Refrescar cola en vivo
-      loadTareasActivas();
-      actualizarResumenBotonTarea();
-    } else {
-      const errorMsg = data.errores ? data.errores.map(e => e.error).join('\n') : (data.message || 'Error al asignar tarea');
-      showError(errorMsg);
-    }
-  } catch (err) {
-    console.error('Error al asignar tarea directa:', err);
-    showError('Error de red al asignar tarea');
-  }
-}
-
-/**
- * Carga y renderizado de Tareas Activas en tiempo real
- */
 export async function loadTareasActivas() {
   const filtro = document.getElementById('filtroTareasTrabajador')?.value || '';
   let url = `${API}/tareas?estado=asignada`;
   if (filtro) url += `&trabajador_id=${filtro}`;
 
   try {
-    const res = await fetch(url, { headers: { 'x-access-token': window.token } });
+    const token = getActiveToken();
+    const res = await fetch(url, { headers: { 'x-access-token': token } });
     const tareas = await res.json();
 
     const kpiActivas = document.getElementById('kpiActivasCount');
@@ -678,8 +832,11 @@ export async function loadTareasActivas() {
                 <span class="task-proc-badge" style="background:${procColor};">${(t.proceso || '').toUpperCase()}</span>
                 ${isAuto ? '<span style="font-size:10px; background:#e0f2fe; color:#0369a1; padding:1px 6px; border-radius:999px; font-weight:700;">AUTO</span>' : ''}
               </div>
-              <h4 class="task-garment-title">${t.cantidad}x ${t.prenda_nombre}</h4>
-              <p class="task-garment-desc">Asignado: ${formatDate(t.fecha_asignacion)}</p>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                <h4 class="task-garment-title" style="margin:0;">${t.cantidad}x ${t.prenda_nombre}</h4>
+                <span style="font-size:11.5px; font-weight:800; color:#15803d; background:#dcfce7; padding:2px 7px; border-radius:6px; flex-shrink:0;">Q ${Number(t.total || 0).toFixed(2)}</span>
+              </div>
+              <p class="task-garment-desc">Asignado: ${formatDate(t.fecha_asignacion)} • Tarifa: Q ${Number(t.precio_unitario || 0).toFixed(2)}/pza</p>
             </div>
             <div class="task-worker-tag">
               <div class="task-worker-avatar-xs">${initials}</div>
@@ -758,9 +915,10 @@ export async function confirmCompletarTarea() {
   }
 
   try {
+    const token = getActiveToken();
     const res = await fetch(`${API}/tareas/${id}/completar`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'x-access-token': window.token },
+      headers: { 'Content-Type': 'application/json', 'x-access-token': token },
       body: JSON.stringify(payload)
     });
     let data = {};
@@ -784,9 +942,10 @@ export async function completarTarea(id, proceso) {
 export async function cancelarTarea(id) {
   if (await confirmDialog('¿Estás seguro de cancelar esta tarea?')) {
     try {
+      const token = getActiveToken();
       const res = await fetch(`${API}/tareas/${id}/cancelar`, {
         method: 'PUT',
-        headers: { 'x-access-token': window.token }
+        headers: { 'x-access-token': token }
       });
       if (res.ok) {
         showWarning('Tarea cancelada');
@@ -915,28 +1074,39 @@ export async function crearTarea() {
 
 // Exposición global al objeto window para listeners del DOM y módulos externos
 Object.assign(window, {
-  updateStepperProgress,
-  actualizarResumenBotonTarea,
-  loadTareasForm,
-  renderTrabajadoresCards,
-  filtrarTrabajadoresCards,
-  buscarTrabajadoresTarea,
-  seleccionarTrabajadorCard,
-  seleccionarTrabajadorTarea,
-  seleccionarProcesoCard,
-  ajustarCantidadTarea,
-  setCantidadPreset,
-  setCantidadTodoStock,
-  buscarPrendasTarea,
-  prepararBusquedaPrendaTarea,
-  seleccionarPrendaTarea,
+  renderCatalogoPrendas,
+  filtrarCatalogoPrendas,
+  limpiarBuscadorPrendas,
+  abrirCantidadPrendaDirecta,
+  seleccionarTrabajadorDropdown,
+  seleccionarProcesoDropdown,
+  onBuscarPrendaKeydown,
+  setupTecladoDualGrid,
+  cargarStockInventario,
+  
+  mostrarAlertaModal,
+  ocultarAlertaModal,
+  abrirModalCantidadRapida,
+  cerrarModalCantidadRapida,
+  cerrarModalCantidadRapidaPorBackdrop,
+  actualizarSubtotalModalEnVivo,
+  confirmarCantidadRapidaModal,
+  
+  renderCanastaPrendas,
+  eliminarPrendaCanasta,
+  limpiarCanasta,
   crearTareaDirecta,
+  
+  calcularTarifaPrenda,
+  loadTareasForm,
   loadTareasActivas,
+  
   openCompletarTareaModal,
   closeCompletarTareaModal,
   confirmCompletarTarea,
   completarTarea,
   cancelarTarea,
+  
   mostrarTrazabilidadStock,
   usarStockDisponible,
   verStockTrazabilidad,

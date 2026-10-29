@@ -172,7 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 8. Verificar token existente y reanudar sesión
-  if (window.token) {
+  const existingToken = window.token || localStorage.getItem('token');
+  if (existingToken) {
+    window.token = existingToken;
     verificarToken();
   }
 

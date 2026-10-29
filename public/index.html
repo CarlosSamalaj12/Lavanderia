@@ -928,6 +928,7 @@
             </div>
           </form>
         </div>
+      </div>
       <!-- Modal: Avanzar / Transferir en Kanban -->
       <div id="modalAvanzarKanban" class="modal">
         <div class="modal-content modal-proc-modern" style="max-width: 540px;">
@@ -1010,188 +1011,180 @@
     </div>
 
     <div id="tareas" class="content">
-      <div class="tareas-modern-layout">
-        <!-- Columna Izquierda: Asignador Guiado en 3 Pasos -->
-        <div class="task-creator-panel" id="taskCreatorPanel">
-          <div class="task-creator-header">
-            <div class="task-creator-title-row">
-              <div class="task-creator-title-left">
-                <div class="task-creator-icon">
-                  <span class="mi">assignment_add</span>
-                </div>
-                <div>
-                  <h3 class="task-creator-title">Asignador Rápido de Tareas</h3>
-                  <p class="task-creator-subtitle">Asigna procesos de producción en 3 pasos directos</p>
-                </div>
-              </div>
-              <div class="task-step-indicator" id="taskStepIndicator">Paso 1 de 3</div>
-            </div>
-            <div class="task-stepper-progress">
-              <div class="task-stepper-bar active" id="stepBar1"></div>
-              <div class="task-stepper-bar" id="stepBar2"></div>
-              <div class="task-stepper-bar" id="stepBar3"></div>
+      <!-- Layout Dual-Grid: Asignador Rápido de Tareas Tipo Escritorio -->
+      <div class="asignador-dual-container">
+        <!-- 1. BARRA SUPERIOR DE PARÁMETROS -->
+        <div class="asignador-top-bar">
+          <div class="top-bar-field">
+            <label for="tareaTrabajador" class="top-bar-label">
+              <span class="mi" style="font-size:16px; color:#0284c7;">person</span> Persona encargada de Tarea
+            </label>
+            <select id="tareaTrabajador" class="top-bar-select" onchange="seleccionarTrabajadorDropdown(this.value)">
+              <option value="">Selecciona operario...</option>
+            </select>
+          </div>
+
+          <div class="top-bar-field">
+            <label for="tareaProceso" class="top-bar-label">
+              <span class="mi" style="font-size:16px; color:#f59e0b;">local_laundry_service</span> Tarea Asignada (Proceso)
+            </label>
+            <select id="tareaProceso" class="top-bar-select" onchange="seleccionarProcesoDropdown(this.value)">
+              <option value="remojo">1. REMOJO (Req: Sucio)</option>
+              <option value="lavado">2. LAVADO (Req: Sucio/Remojo)</option>
+              <option value="desmanche">3. DESMANCHE (Especial)</option>
+              <option value="planchado">4. PLANCHADO (Req: Limpio)</option>
+            </select>
+          </div>
+
+          <div class="top-bar-field top-bar-search-field">
+            <label for="buscarPrenda" class="top-bar-label">
+              <span class="mi" style="font-size:16px; color:#10b981;">search</span> BUSCAR PRENDA <kbd class="kbd-hint">Enter ↵</kbd>
+            </label>
+            <div class="search-input-wrapper">
+              <input type="text" id="buscarPrenda" class="top-bar-search-input" placeholder="Escribe el nombre o código de la prenda..." oninput="filtrarCatalogoPrendas()" onkeydown="onBuscarPrendaKeydown(event)" autocomplete="off">
+              <button type="button" class="search-clear-btn" onclick="limpiarBuscadorPrendas()" title="Limpiar">&times;</button>
             </div>
           </div>
 
-          <!-- PASO 1: Selección de Operario -->
-          <div class="task-step-block" id="stepBlockWorker">
-            <div class="task-step-label">
-              <span class="task-step-title">
-                <span class="task-step-badge-num">1</span>
-                Seleccionar Operario
-              </span>
-              <span id="selectedWorkerBadge" style="display:none;" class="worker-assigned-confirmation">
-                <span class="mi" style="font-size:16px;">check_circle</span>
-                <span id="selectedWorkerName">Operario</span>
-              </span>
+          <div class="top-bar-stock-filter">
+            <label class="stock-filter-check-label" title="Ocultar prendas que no tienen piezas en la etapa seleccionada">
+              <input type="checkbox" id="checkSoloConStock" onchange="filtrarCatalogoPrendas()">
+              <span>Solo con stock</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. PANELES DUALES PARALELOS (CATÁLOGO A LA IZQUIERDA + CANASTA A LA DERECHA) -->
+        <div class="dual-grid-body">
+          <!-- Columna Izquierda: Catálogo de Prendas Disponibles -->
+          <div class="dual-panel dual-catalog-panel">
+            <div class="dual-panel-header">
+              <div class="panel-header-title">
+                <span class="mi" style="font-size:18px; color:#0284c7;">inventory_2</span>
+                <span>Catálogo de Prendas</span>
+              </div>
+              <span class="panel-count-badge" id="catalogCountBadge">0 prendas</span>
             </div>
-            <div class="workers-search-wrap search-input-wrap">
-              <span class="mi search-icon">search</span>
-              <input type="text" id="buscarTrabajadorTarea" class="search-control" placeholder="Buscar operario por nombre..." oninput="filtrarTrabajadoresCards()" autocomplete="off">
-              <input type="hidden" id="tareaTrabajador">
+
+            <div class="dual-table-container" id="catalogTableContainer">
+              <table class="dual-table catalog-table">
+                <thead>
+                  <tr>
+                    <th style="width: 75px; text-align: center;">ID</th>
+                    <th>Descripción de la Prenda</th>
+                    <th style="width: 130px; text-align: center;">Stock Etapa</th>
+                    <th style="width: 100px; text-align: right;">Tarifa</th>
+                  </tr>
+                </thead>
+                <tbody id="catalogTableBody">
+                  <!-- Filas cargadas dinámicamente -->
+                </tbody>
+              </table>
             </div>
-            <div class="workers-cards-grid" id="workersCardsGrid">
-              <!-- Tarjetas de trabajadores cargadas dinámicamente -->
+            <div class="catalog-table-footer">
+              <span class="mi" style="font-size:14px; color:#64748b;">info</span>
+              <span>Haz clic o pulsa <kbd>Enter ↵</kbd> para indicar la cantidad de piezas.</span>
             </div>
           </div>
 
-          <!-- PASO 2: Selección de Proceso -->
-          <div class="task-step-block" id="stepBlockProcess">
-            <div class="task-step-label">
-              <span class="task-step-title">
-                <span class="task-step-badge-num">2</span>
-                Seleccionar Proceso
-              </span>
-              <span id="selectedProcessBadge" style="font-size:12px; font-weight:700; color:#0284c7;">Sin seleccionar</span>
-            </div>
-            <input type="hidden" id="tareaProceso" value="">
-            <input type="hidden" id="tareaFecha">
-            <div class="processes-cards-grid">
-              <div class="process-card-btn proc-btn-remojo" id="procBtnRemojo" onclick="seleccionarProcesoCard('remojo')">
-                <div class="proc-head">
-                  <div class="proc-icon-box"><span class="mi">water_drop</span></div>
-                  <span class="proc-pill">Paso 1</span>
-                </div>
-                <div class="proc-title">1. Remojo</div>
-                <div class="proc-desc">Tratamiento previo y ablandado de suciedad pesada</div>
-                <div class="proc-status-tag"><span class="mi" style="font-size:14px;">arrow_forward</span> Requiere: SUCIO</div>
+          <!-- Columna Derecha: Prendas Asignadas a la Orden (Canasta) -->
+          <div class="dual-panel dual-basket-panel">
+            <div class="dual-panel-header">
+              <div class="panel-header-title">
+                <span class="mi" style="font-size:18px; color:#16a34a;">shopping_cart_checkout</span>
+                <span>Prendas en esta Orden</span>
               </div>
-
-              <div class="process-card-btn proc-btn-lavado" id="procBtnLavado" onclick="seleccionarProcesoCard('lavado')">
-                <div class="proc-head">
-                  <div class="proc-icon-box"><span class="mi">local_laundry_service</span></div>
-                  <span class="proc-pill">Paso 2</span>
-                </div>
-                <div class="proc-title">2. Lavado</div>
-                <div class="proc-desc">Ciclo principal de lavado industrial en máquinas</div>
-                <div class="proc-status-tag"><span class="mi" style="font-size:14px;">arrow_forward</span> Requiere: SUCIO / REMOJO</div>
-              </div>
-
-              <div class="process-card-btn proc-btn-desmanche" id="procBtnDesmanche" onclick="seleccionarProcesoCard('desmanche')">
-                <div class="proc-head">
-                  <div class="proc-icon-box"><span class="mi">auto_fix_high</span></div>
-                  <span class="proc-pill">Especial</span>
-                </div>
-                <div class="proc-title">3. Desmanche</div>
-                <div class="proc-desc">Tratamiento químico intensivo para manchas difíciles</div>
-                <div class="proc-status-tag"><span class="mi" style="font-size:14px;">arrow_forward</span> Requiere: LAVADO</div>
-              </div>
-
-              <div class="process-card-btn proc-btn-planchado" id="procBtnPlanchado" onclick="seleccionarProcesoCard('planchado')">
-                <div class="proc-head">
-                  <div class="proc-icon-box"><span class="mi">iron</span></div>
-                  <span class="proc-pill">Paso 4</span>
-                </div>
-                <div class="proc-title">4. Planchado</div>
-                <div class="proc-desc">Calandrado, planchado a vapor y doblado final</div>
-                <div class="proc-status-tag"><span class="mi" style="font-size:14px;">arrow_forward</span> Requiere: LIMPIO</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- PASO 3: Selección de Prenda & Cantidad -->
-          <div class="task-step-block" id="stepBlockGarment">
-            <div class="task-step-label">
-              <span class="task-step-title">
-                <span class="task-step-badge-num">3</span>
-                Seleccionar Prenda y Cantidad
-              </span>
-              <span id="selectedStockTag" style="font-size:12px; font-weight:700; color:#16a34a; display:none;">Stock disponible: 0</span>
-            </div>
-            <div class="prenda-search-box">
-              <div class="workers-search-wrap search-input-wrap">
-                <span class="mi search-icon">search</span>
-                <input type="text" id="buscarPrenda" class="search-control" placeholder="Buscar prenda en catálogo..." oninput="buscarPrendasTarea()" onfocus="prepararBusquedaPrendaTarea()" autocomplete="off">
-              </div>
-              <div id="busquedaRapidaTarea" class="prenda-quick-selector"></div>
-            </div>
-            <div id="stockInfoPrenda" style="display:none;"></div>
-
-            <div class="prenda-qty-row">
-              <div class="qty-stepper-wrap">
-                <span class="qty-stepper-label">Cantidad:</span>
-                <div class="qty-stepper-control">
-                  <button type="button" class="qty-stepper-btn" onclick="ajustarCantidadTarea(-1)">-</button>
-                  <input type="number" id="cantidadPrenda" class="qty-stepper-input" value="1" min="1" oninput="actualizarResumenBotonTarea()">
-                  <button type="button" class="qty-stepper-btn" onclick="ajustarCantidadTarea(1)">+</button>
-                </div>
-              </div>
-              <div class="qty-presets-row">
-                <button type="button" class="qty-preset-btn" onclick="setCantidadPreset(5)">+5</button>
-                <button type="button" class="qty-preset-btn" onclick="setCantidadPreset(10)">+10</button>
-                <button type="button" class="qty-preset-btn" onclick="setCantidadPreset(25)">+25</button>
-                <button type="button" class="qty-preset-btn qty-preset-all" onclick="setCantidadTodoStock()">Todo el Stock</button>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="panel-count-badge basket-badge" id="basketCountBadge">0 asignadas</span>
+                <button type="button" class="btn-clear-basket-all" onclick="limpiarCanasta()" title="Vaciar toda la lista">
+                  <span class="mi" style="font-size:14px;">delete_sweep</span> Limpiar
+                </button>
               </div>
             </div>
 
-            <!-- Botón Principal de Asignación Directa -->
-            <button type="button" id="btnAsignarTareaMain" class="btn-assign-main" onclick="crearTareaDirecta()">
-              <div class="btn-assign-left">
-                <div class="btn-assign-icon">
+            <div class="dual-table-container" id="basketTableContainer">
+              <table class="dual-table basket-table">
+                <thead>
+                  <tr>
+                    <th style="width: 70px; text-align: center;">Cant</th>
+                    <th style="width: 65px; text-align: center;">ID</th>
+                    <th>Descripción</th>
+                    <th style="width: 85px; text-align: right;">Tarifa</th>
+                    <th style="width: 95px; text-align: right;">Subtotal</th>
+                    <th style="width: 45px; text-align: center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="basketTableBody">
+                  <!-- Filas de prendas asignadas o empty state -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Resumen Financiero y Botón de Despacho -->
+            <div class="basket-panel-footer">
+              <div class="basket-totals-grid">
+                <div class="basket-total-item">
+                  <span class="b-lbl">Variedad:</span>
+                  <span class="b-val" id="basketStatTipos">0 tipos</span>
+                </div>
+                <div class="basket-total-item">
+                  <span class="b-lbl">Total Piezas:</span>
+                  <span class="b-val text-blue" id="basketStatPiezas">0 pzs</span>
+                </div>
+                <div class="basket-total-item">
+                  <span class="b-lbl">Destajo Devengado:</span>
+                  <span class="b-val text-green" id="basketStatTotalQ">Q 0.00</span>
+                </div>
+              </div>
+
+              <button type="button" id="btnAsignarTareaMain" class="btn-dispatch-order" onclick="crearTareaDirecta()">
+                <div class="dispatch-icon-box">
                   <span class="mi">rocket_launch</span>
                 </div>
-                <div>
-                  <span class="btn-assign-title">Asignar Tarea a Producción</span>
-                  <span class="btn-assign-sub" id="btnAsignarSub">Completa los 3 pasos para despachar la orden</span>
+                <div class="dispatch-text-box">
+                  <span class="dispatch-title">Asignar Tarea a Producción</span>
+                  <span class="dispatch-sub" id="btnAsignarSummary">Sin prendas configuradas</span>
                 </div>
+                <kbd class="dispatch-kbd">Ctrl + Enter</kbd>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. SECCIÓN INFERIOR: MONITOR DE PRODUCCIÓN EN VIVO -->
+      <div class="tasks-monitor-panel bottom-monitor-section" id="tasksMonitorPanel">
+        <div class="tasks-monitor-header">
+          <div class="monitor-head-row">
+            <div class="monitor-title-wrap">
+              <span class="mi" style="font-size:22px; color:#0284c7;">monitoring</span>
+              <div>
+                <h3 class="monitor-title">Monitor de Producción en Vivo</h3>
+                <span class="monitor-subtitle">Seguimiento de lotes y liquidación activa en tiempo real</span>
               </div>
-              <div class="btn-assign-summary-box" id="btnAsignarSummary">
-                Sin configurar
-              </div>
+              <span class="monitor-count-pill" id="kpiActivasCount">0</span>
+            </div>
+            <div class="monitor-live-badge">
+              <span class="monitor-live-dot"></span>
+              <span>En Tiempo Real</span>
+            </div>
+          </div>
+          <div class="monitor-controls-row">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:12px; color:#64748b; font-weight:700;">Filtrar operario:</span>
+              <select id="filtroTareasTrabajador" class="monitor-filter-select" onchange="loadTareasActivas()">
+                <option value="">Todos los operarios</option>
+              </select>
+            </div>
+            <button type="button" class="btn-monitor-refresh" onclick="loadTareasActivas()">
+              <span class="mi" style="font-size:16px;">refresh</span>
+              <span id="taskQueueTitle">Actualizar</span>
             </button>
           </div>
         </div>
 
-        <!-- Columna Derecha: Monitor en Tiempo Real de Tareas Activas -->
-        <div class="tasks-monitor-panel" id="tasksMonitorPanel">
-          <div class="tasks-monitor-header">
-            <div class="monitor-head-row">
-              <div class="monitor-title-wrap">
-                <h3 class="monitor-title">Monitor de Producción en Vivo</h3>
-                <span class="monitor-count-pill" id="kpiActivasCount">0</span>
-              </div>
-              <div class="monitor-live-badge">
-                <span class="monitor-live-dot"></span>
-                <span>En Tiempo Real</span>
-              </div>
-            </div>
-            <div class="monitor-controls-row">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:12px; color:#64748b; font-weight:600;">Filtrar:</span>
-                <select id="filtroTareasTrabajador" class="monitor-filter-select" onchange="loadTareasActivas()">
-                  <option value="">Todos los operarios</option>
-                </select>
-              </div>
-              <button type="button" class="btn-monitor-refresh" onclick="loadTareasActivas()">
-                <span class="mi" style="font-size:16px;">refresh</span>
-                <span id="taskQueueTitle">Actualizar</span>
-              </button>
-            </div>
-          </div>
-
-          <div class="active-tasks-list" id="tareasActivasLista">
-            <!-- Tarjetas de tareas activas -->
-          </div>
+        <div class="active-tasks-list" id="tareasActivasLista">
+          <!-- Tarjetas de tareas activas -->
         </div>
       </div>
     </div>
@@ -1565,6 +1558,59 @@
           <button class="btn btn-secondary" onclick="closeDevolucionModal()"><span class="mi">close</span>Cancelar</button>
           <button class="btn btn-success" onclick="confirmarDevolucion()"><span class="mi">task_alt</span>Confirmar</button>
         </div>
+      </div>
+    </div>
+
+        <!-- Modal Popup Minimalista: CONTROL DE BLANCOS (Ingreso de Cantidad) -->
+    <div id="modalCantidadRapidaPrenda" class="modal" onclick="cerrarModalCantidadRapidaPorBackdrop(event)">
+      <div class="modal-content modal-control-blancos">
+        <div class="modal-cb-header">
+          <div class="modal-cb-title-wrap">
+            <span class="mi" style="font-size: 18px; color: #0284c7;">layers</span>
+            <span class="modal-cb-title">CONTROL DE BLANCOS</span>
+          </div>
+          <button type="button" class="modal-cb-close" onclick="cerrarModalCantidadRapida()">&times;</button>
+        </div>
+
+        <form id="formCantidadRapidaPrenda" novalidate onsubmit="confirmarCantidadRapidaModal(event)">
+          <div class="modal-cb-body">
+            <div class="modal-cb-prompt">
+              <p class="modal-cb-prompt-text">Ingrese la cantidad de Prendas</p>
+              <div class="modal-cb-prenda-info">
+                <span id="modalCantidadPrendaNombre" class="cb-prenda-name">Prenda Seleccionada</span>
+                <span id="modalCantidadStockTag" class="cb-stock-tag">Disponible: 0 piezas</span>
+                <span id="modalCantidadTarifaTag" class="cb-rate-tag">Q 0.00 / pza</span>
+              </div>
+            </div>
+
+            <!-- Input Central de Cantidad -->
+            <div class="modal-cb-input-wrap">
+              <input type="number" id="inputCantidadRapidaPrenda" class="modal-cb-input" min="1" value="1" required autocomplete="off" oninput="actualizarSubtotalModalEnVivo()">
+            </div>
+
+            <!-- Alerta No Nativa -->
+            <div class="qinput-alert-box" id="modalCantidadAlertBox" style="display: none;">
+              <div class="qinput-alert-icon"><span class="mi" style="font-size: 16px;">warning</span></div>
+              <div class="qinput-alert-content">
+                <div class="qinput-alert-title" id="modalCantidadAlertTitle">Stock insuficiente</div>
+                <div class="qinput-alert-desc" id="modalCantidadAlertDesc">Solo hay 0 piezas disponibles</div>
+              </div>
+            </div>
+
+            <div class="modal-cb-subtotal-row">
+              <span class="cb-subtotal-lbl">Subtotal estimado:</span>
+              <span id="modalSubtotalEstimado" class="cb-subtotal-val">Q 0.00</span>
+            </div>
+          </div>
+
+          <div class="modal-cb-footer">
+            <button type="button" class="btn-cb-cancel" onclick="cerrarModalCantidadRapida()">Cancelar</button>
+            <button type="submit" id="btnConfirmarCantidadModal" class="btn-cb-submit">
+              <span>Aceptar</span>
+              <kbd class="cb-kbd">Enter ↵</kbd>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -2161,6 +2207,6 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
   <!-- Arquitectura Modular Frontend (ES Modules) -->
-  <script type="module" src="js/app.js?v=16"></script>
+  <script type="module" src="js/app.js?v=23"></script>
 </body>
 </html>
