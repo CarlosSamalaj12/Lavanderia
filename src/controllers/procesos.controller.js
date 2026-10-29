@@ -80,6 +80,15 @@ const procesosController = {
     } catch (err) {
       next(err);
     }
+  },
+
+  async obtenerTableroKanban(req, res, next) {
+    try {
+      const data = await procesosService.obtenerTableroKanban();
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
   }
 };
 

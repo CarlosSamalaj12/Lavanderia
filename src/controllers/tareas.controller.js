@@ -59,6 +59,18 @@ const tareasController = {
     } catch (err) {
       next(err);
     }
+  },
+
+  async avanzarKanban(req, res, next) {
+    try {
+      if (req.userRol === 'reportes') {
+        return res.status(403).json({ message: 'El rol reportes no puede mover tareas en Kanban' });
+      }
+      const data = await tareasService.avanzarKanban(req.body, req.userId);
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
   }
 };
 

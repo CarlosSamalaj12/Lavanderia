@@ -94,7 +94,9 @@ const prendasService = {
     const {
       nombre, descripcion,
       precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
+      precio_tendido_factura, precio_recogido_factura,
       precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
+      precio_tendido, precio_recogido,
       requiere_plancha
     } = data;
 
@@ -107,15 +109,19 @@ const prendasService = {
     const sql = `
       INSERT INTO prendas (nombre, descripcion, 
         precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
-        precio_remojo, precio_lavado, precio_desmanche, precio_planchado, 
+        precio_tendido_factura, precio_recogido_factura,
+        precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
+        precio_tendido, precio_recogido,
         requiere_plancha)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const result = await dbAsync.run(sql, [
       nombre, descripcion || null,
       precio_remojo_factura || 0, precio_lavado_factura || 0, precio_desmanche_factura || 0, precio_planchado_factura || 0,
+      precio_tendido_factura || 0, precio_recogido_factura || 0,
       precio_remojo || 0, precio_lavado || 0, precio_desmanche || 0, precio_planchado || 0,
+      precio_tendido || 0, precio_recogido || 0,
       requiere_plancha !== undefined ? requiere_plancha : 1
     ]);
 
@@ -228,7 +234,9 @@ const prendasService = {
     const {
       nombre, descripcion,
       precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
+      precio_tendido_factura, precio_recogido_factura,
       precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
+      precio_tendido, precio_recogido,
       requiere_plancha, activo
     } = data;
 
@@ -240,10 +248,14 @@ const prendasService = {
         precio_lavado_factura = COALESCE(?, precio_lavado_factura),
         precio_desmanche_factura = COALESCE(?, precio_desmanche_factura),
         precio_planchado_factura = COALESCE(?, precio_planchado_factura),
+        precio_tendido_factura = COALESCE(?, precio_tendido_factura),
+        precio_recogido_factura = COALESCE(?, precio_recogido_factura),
         precio_remojo = COALESCE(?, precio_remojo),
         precio_lavado = COALESCE(?, precio_lavado),
         precio_desmanche = COALESCE(?, precio_desmanche),
         precio_planchado = COALESCE(?, precio_planchado),
+        precio_tendido = COALESCE(?, precio_tendido),
+        precio_recogido = COALESCE(?, precio_recogido),
         requiere_plancha = COALESCE(?, requiere_plancha),
         activo = COALESCE(?, activo)
       WHERE id = ?
@@ -252,7 +264,9 @@ const prendasService = {
     await dbAsync.run(sql, [
       nombre, descripcion,
       precio_remojo_factura, precio_lavado_factura, precio_desmanche_factura, precio_planchado_factura,
+      precio_tendido_factura, precio_recogido_factura,
       precio_remojo, precio_lavado, precio_desmanche, precio_planchado,
+      precio_tendido, precio_recogido,
       requiere_plancha, activo, id
     ]);
 

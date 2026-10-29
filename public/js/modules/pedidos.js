@@ -902,7 +902,7 @@ export function renderHistorialPedidosUI() {
             <th>Prendas</th>
             <th>Fecha Requerida</th>
             <th>Estado</th>
-            <th style="text-align: right; width: 170px;">Acciones</th>
+            <th style="text-align: center; width: 170px;">Acciones</th>
           </tr>
         </thead>
         <tbody>

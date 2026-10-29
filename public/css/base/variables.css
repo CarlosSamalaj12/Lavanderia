@@ -38,8 +38,8 @@
   --bg-surface-elevated: #172439;
 
   /* Tipografía y Textos */
-  --font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-family-mono: 'Courier New', monospace;
+  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Courier New', monospace;
   --text-primary: #1f2d3d;
   --text-heading: #2c3e50;
   --text-muted: #7f8c8d;

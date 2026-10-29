@@ -1,0 +1,912 @@
+/* ==========================================================================
+   Componente: Flujo de Procesos Operativos (Diseño ERP Industrial)
+   Basado en la especificación visual de referencia
+   ========================================================================== */
+
+.procesos-wrapper {
+  padding: 0 0 40px 0;
+}
+
+/* Breadcrumb Superior */
+.procesos-breadcrumb {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.procesos-breadcrumb .crumb-sep {
+  color: #cbd5e1;
+  font-weight: 400;
+}
+.procesos-breadcrumb .crumb-active {
+  color: #0f172a;
+}
+
+/* Barra de Encabezado Principal */
+.procesos-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.procesos-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.procesos-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.procesos-main-heading {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.badge-live-pill {
+  background: #e0f2fe;
+  color: #0284c7;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #bae6fd;
+}
+.badge-live-pill .pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0284c7;
+  animation: livePulse 1.8s infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.procesos-subtitle {
+  color: #64748b;
+  font-size: 13px;
+  margin: 6px 0 0 0;
+  line-height: 1.4;
+}
+
+/* Barra de Botones de Acción Superior */
+.procesos-actions-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-proc-outline {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.btn-proc-outline:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+.btn-proc-outline .mi {
+  font-size: 16px;
+}
+
+.btn-proc-dark {
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+}
+.btn-proc-dark:hover {
+  background: #1e293b;
+  border-color: #1e293b;
+  transform: translateY(-1px);
+}
+.btn-proc-dark .mi {
+  font-size: 16px;
+}
+
+/* Fila de Tarjetas KPI Resumen (3 Cards) */
+.procesos-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.proc-kpi-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.proc-kpi-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.proc-kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.proc-kpi-icon.icon-rose { background: #ffe4e6; color: #e11d48; }
+.proc-kpi-icon.icon-indigo { background: #e0e7ff; color: #4f46e5; }
+.proc-kpi-icon.icon-sky { background: #e0f2fe; color: #0284c7; }
+
+.proc-kpi-meta {
+  display: flex;
+  flex-direction: column;
+}
+.proc-kpi-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 3px;
+}
+.proc-kpi-num-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.proc-kpi-num {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+.proc-kpi-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.proc-kpi-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+.proc-kpi-tag.tag-emerald { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; }
+.proc-kpi-tag.tag-mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #475569; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; }
+
+/* Subtítulo de Sección Estaciones de Trabajo */
+.procesos-section-subbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.procesos-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+.procesos-section-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* Grilla de 10 Estaciones de Trabajo (2 filas de 5) */
+.etapas-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.etapa-card {
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #ffffff;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  user-select: none;
+  min-height: 115px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.etapa-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+/* Colores de Etapas (Exactos a la Referencia) */
+.etapa-sucio { background: #e11d48; }       /* 1. Rojo Carmin */
+.etapa-remojo { background: #ea580c; }      /* 2. Naranja */
+.etapa-lavado { background: #ca8a04; }      /* 3. Amarillo Dorado */
+.etapa-tendido { background: #059669; }     /* 4. Verde Esmeralda */
+.etapa-recogido { background: #0d9488; }    /* 5. Teal Turquesa */
+.etapa-reproceso { background: #2563eb; }   /* 6. Azul Real */
+.etapa-limpio { background: #7c3aed; }      /* 7. Violeta / Purpura */
+.etapa-planchado { background: #334155; }   /* 8. Pizarra Oscura */
+.etapa-desmanche { background: #db2777; }   /* 9. Magenta / Rosa Fuerte */
+.etapa-stock { background: #0891b2; }       /* 10. Cian Oscuro */
+
+.etapa-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.etapa-icon {
+  font-size: 18px;
+  opacity: 0.95;
+}
+
+.etapa-badge-active {
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.etapa-pct-pill {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  letter-spacing: normal;
+}
+
+.etapa-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin: 6px 0 2px 0;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.etapa-num-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.etapa-count {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.etapa-unit {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Indicador de Etapa Activa / Seleccionada */
+.etapa-card.is-active {
+  ring: 3px solid #0f172a;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+.etapa-card.is-active .etapa-active-indicator {
+  display: block;
+}
+.etapa-active-indicator {
+  display: none;
+  width: 100%;
+  height: 4px;
+  background: #ffffff;
+  border-radius: 9999px;
+  margin-top: 8px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+}
+
+/* ==========================================================================
+   Contenedor Principal de Registros y Tabla de la Etapa Seleccionada
+   ========================================================================== */
+.etapa-detail-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+/* Banner de la Etapa */
+.etapa-banner {
+  padding: 12px 20px;
+  color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.etapa-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.etapa-banner-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.4px !important;
+  text-transform: uppercase !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: #ffffff !important;
+}
+
+.etapa-badge-regs {
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.etapa-badge-units {
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff !important;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+
+.btn-transferir-lote {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-transferir-lote:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Barra de Filtros y Búsqueda Debajo del Banner */
+.etapa-filters-bar {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.etapa-filters-bar .etapa-filters-left {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  flex: 1 1 auto !important;
+}
+
+.etapa-filters-bar .etapa-search-wrap {
+  position: relative !important;
+  width: 250px !important;
+  min-width: 200px !important;
+  max-width: 300px !important;
+  flex: 0 1 250px !important;
+}
+.etapa-filters-bar .etapa-search-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 17px;
+  z-index: 2;
+}
+.etapa-filters-bar .etapa-search-wrap .etapa-search-input {
+  width: 100% !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  padding: 6px 30px 6px 36px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 7px !important;
+  font-size: 12.5px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  outline: none;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s ease;
+}
+.etapa-filters-bar .etapa-search-wrap .etapa-search-input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15) !important;
+}
+.etapa-filters-bar .etapa-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 15px;
+  display: none;
+  z-index: 2;
+}
+
+.etapa-filters-bar select.etapa-select-filter,
+.etapa-filters-bar input.etapa-select-filter {
+  width: auto !important;
+  min-width: 140px !important;
+  max-width: 230px !important;
+  flex: 0 0 auto !important;
+  min-height: 38px !important;
+  height: 38px !important;
+  padding: 6px 12px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 7px !important;
+  font-size: 12.5px !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+}
+.etapa-filters-bar select.etapa-select-filter:focus,
+.etapa-filters-bar input.etapa-select-filter:focus {
+  border-color: #0284c7 !important;
+}
+
+.etapa-filters-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-export-excel {
+  background: #ffffff;
+  border: 1px solid #10b981;
+  color: #047857;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-export-excel:hover {
+  background: #ecfdf5;
+}
+
+.btn-export-pdf {
+  background: #ffffff;
+  border: 1px solid #ef4444;
+  color: #b91c1c;
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-export-pdf:hover {
+  background: #fef2f2;
+}
+
+/* Fila de Filtros Activos */
+.etapa-active-chips-row {
+  background: #ffffff;
+  padding: 8px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 11.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.active-chip {
+  background: #f1f5f9;
+  color: #1e293b;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+.active-chip-remove {
+  cursor: pointer;
+  color: #94a3b8;
+  font-weight: bold;
+}
+.active-chip-remove:hover {
+  color: #ef4444;
+}
+.btn-clear-all-chips {
+  color: #0284c7;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-left: 6px;
+}
+
+/* ==========================================================================
+   Tabla de Registros de Procesos (Estilo ERP de Alto Rendimiento)
+   ========================================================================== */
+.table-procesos-erp {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  margin: 0 !important;
+}
+
+.table-procesos-erp thead th {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.6px !important;
+  text-transform: uppercase !important;
+  padding: 12px 14px !important;
+  border: none !important;
+  white-space: nowrap !important;
+}
+
+.table-procesos-erp tbody tr {
+  transition: background-color 0.15s ease;
+}
+.table-procesos-erp tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.table-procesos-erp tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #1e293b;
+}
+
+/* Checkbox Columna */
+.td-col-check {
+  width: 38px;
+  text-align: center;
+}
+.td-col-check input[type="checkbox"] {
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+  accent-color: #0284c7;
+}
+
+/* Celda de Código / Ticket */
+.td-ticket-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ticket-code-pill {
+  background: #e0f2fe;
+  color: #0369a1;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  width: fit-content;
+}
+.ticket-lote-text {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Celda de Prenda con Icono y Categoría */
+.td-prenda-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.prenda-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.prenda-meta {
+  display: flex;
+  flex-direction: column;
+}
+.prenda-meta-title {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 13px;
+  text-transform: uppercase;
+  line-height: 1.25;
+}
+.prenda-meta-desc {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+/* Celda de Cantidad */
+.cantidad-pill-stage {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #ffffff !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: normal;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+/* Prioridad */
+.priority-pill {
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.priority-pill.priority-normal {
+  background: #fef3c7;
+  color: #b45309;
+}
+.priority-pill.priority-alta {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.priority-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Usuario */
+.user-cell-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 12.5px;
+}
+.user-cell-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Tiempo en Etapa */
+.badge-time-stage {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.badge-time-stage .mi {
+  font-size: 14px;
+  color: #0284c7;
+}
+
+/* Botón Mover al Siguiente Proceso */
+.btn-mover-next {
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  padding: 7px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-mover-next:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
+}
+.btn-mover-next .mi {
+  font-size: 14px;
+}
+
+/* Footer de la Tabla */
+.procesos-table-footer {
+  padding: 12px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.procesos-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-page-step {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+.btn-page-step:hover {
+  background: #f1f5f9;
+}
+.page-pill-active {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Modal Moderno para Ingresar Prendas o Mover en Lote */
+.modal-proc-modern {
+  max-width: 520px;
+}
+.modal-proc-modern .form-group {
+  margin-bottom: 14px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .etapas-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 800px) {
+  .procesos-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .etapas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .etapa-filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

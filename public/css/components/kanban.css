@@ -1,0 +1,521 @@
+/* ==========================================================================
+   Tablero Kanban de Flujo Industrial - Sistema de Lavandería
+   Diseño ERP Stitch con soporte de Drag & Drop y pantallas táctiles
+   ========================================================================== */
+
+/* Alternador de Vistas (Kanban vs Tabla) */
+.proc-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  gap: 2px;
+}
+
+.btn-toggle-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.btn-toggle-view:hover {
+  color: #0f172a;
+}
+
+.btn-toggle-view.active {
+  background: #ffffff;
+  color: #0284c7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btn-toggle-view .mi {
+  font-size: 16px;
+}
+
+/* Contenedor del Tablero Kanban */
+.kanban-board-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 8px 4px 24px 4px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 18px;
+}
+
+.kanban-board-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.kanban-board-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 999px;
+}
+
+.kanban-board-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.kanban-board-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Columna Kanban */
+.kanban-column {
+  flex: 0 0 290px;
+  min-width: 290px;
+  max-width: 290px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 220px);
+  min-height: 520px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.2s, background-color 0.2s;
+  scroll-snap-align: start;
+}
+
+.kanban-column.drag-over {
+  border-color: #0284c7 !important;
+  background-color: #f0f9ff !important;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2) !important;
+}
+
+/* Cabecera de la Columna */
+.kanban-col-header {
+  padding: 14px 14px 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
+  background: #ffffff;
+  border-top-left-radius: 13px;
+  border-top-right-radius: 13px;
+}
+
+.kanban-col-color-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-top-left-radius: 13px;
+  border-top-right-radius: 13px;
+}
+
+.kanban-col-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.kanban-col-title-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.kanban-col-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.kanban-col-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.01em;
+}
+
+.kanban-col-badge-count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.kanban-col-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.kanban-col-units-pill {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Lista / Zona de Soltar de Tarjetas */
+.kanban-cards-list {
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+}
+
+.kanban-cards-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.kanban-cards-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+/* Tarjeta de Lote / Tarea */
+.kanban-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.09);
+  border-color: #cbd5e1;
+}
+
+.kanban-card.is-dragging {
+  opacity: 0.45;
+  transform: scale(0.96);
+  cursor: grabbing;
+}
+
+.kanban-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.kanban-ticket-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #334155;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid #e2e8f0;
+}
+
+.kanban-card-time {
+  font-size: 10.5px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.kanban-card-time .mi {
+  font-size: 12px;
+}
+
+.kanban-garment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.kanban-garment-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.kanban-garment-icon .mi {
+  font-size: 18px;
+}
+
+.kanban-garment-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.kanban-garment-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.kanban-garment-sub {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.kanban-qty-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 6px;
+  color: #ffffff;
+  display: inline-block;
+}
+
+.kanban-worker-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+  margin-bottom: 10px;
+}
+
+.kanban-worker-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.kanban-worker-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+}
+
+.kanban-worker-none {
+  font-size: 11px;
+  color: #94a3b8;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.kanban-pay-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
+/* Botón Rápido "Avanzar a" */
+.btn-kanban-avanzar {
+  width: 100%;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-kanban-avanzar:hover {
+  background: #0284c7;
+  border-color: #0284c7;
+  color: #ffffff;
+}
+
+.btn-kanban-avanzar .mi {
+  font-size: 14px;
+}
+
+/* Estado Vacío de Columna */
+.kanban-empty-col {
+  padding: 32px 14px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 12px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  margin: 6px 0;
+}
+
+.kanban-empty-col .mi {
+  font-size: 28px;
+  color: #cbd5e1;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Modal de Transferencia Rápida Kanban */
+.kanban-transfer-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.kanban-route-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-route-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.kanban-route-val {
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.kanban-route-arrow {
+  color: #0284c7;
+  font-size: 24px;
+}
+
+/* Selector de Operarios en Cuadrícula */
+.kanban-workers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #f8fafc;
+  margin-top: 6px;
+}
+
+.kanban-worker-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.kanban-worker-pick:hover {
+  border-color: #0284c7;
+  background: #f0f9ff;
+}
+
+.kanban-worker-pick.selected {
+  border-color: #0284c7;
+  background: #e0f2fe;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.3);
+}
+
+.kanban-worker-pick-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kanban-worker-pick-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Caja de Cálculo Financiero en Vivo */
+.kanban-calc-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kanban-calc-left {
+  font-size: 12px;
+  color: #166534;
+}
+
+.kanban-calc-total {
+  font-size: 18px;
+  font-weight: 800;
+  color: #15803d;
+}

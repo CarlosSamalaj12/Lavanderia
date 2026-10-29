@@ -26,3 +26,7 @@
 @import "./components/pedidos.css";
 @import "./components/dashboard.css";
 @import "./components/tareas.css";
+@import "./components/calendar.css";
+@import "./components/stitch-catalog.css";
+@import "./components/procesos-modern.css";
+@import "./components/kanban.css";

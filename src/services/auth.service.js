@@ -33,7 +33,7 @@ const authService = {
     const token = jwt.sign(
       { id: user.id, username: user.username, rol: user.rol, nombre: user.nombre },
       process.env.JWT_SECRET || 'lavanderia_secret_key_2024',
-      { expiresIn: '24h' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
 
     return {

@@ -17,8 +17,8 @@ label {
 }
 
 .form-control,
-input:not([type="checkbox"]):not([type="radio"]):not(.catalog-stepper-input):not(.cart-stepper-qty):not(.qty-stepper-input),
-select,
+input:not([type="checkbox"]):not([type="radio"]):not(.catalog-stepper-input):not(.cart-stepper-qty):not(.qty-stepper-input):not(.numInput):not([class*="flatpickr"]),
+select:not([class*="flatpickr"]),
 textarea {
   width: 100%;
   min-height: 42px;
@@ -33,14 +33,14 @@ textarea {
 }
 
 .form-control::placeholder,
-input::placeholder,
+input:not(.numInput):not([class*="flatpickr"])::placeholder,
 textarea::placeholder {
   color: #94a3b8;
 }
 
 .form-control:focus,
-input:not([type="checkbox"]):not([type="radio"]):not(.catalog-stepper-input):not(.cart-stepper-qty):not(.qty-stepper-input):focus,
-select:focus,
+input:not([type="checkbox"]):not([type="radio"]):not(.catalog-stepper-input):not(.cart-stepper-qty):not(.qty-stepper-input):not(.numInput):not([class*="flatpickr"]):focus,
+select:not([class*="flatpickr"]):focus,
 textarea:focus {
   outline: none;
   border-color: #0284c7;
@@ -59,8 +59,8 @@ textarea:focus {
 }
 
 /* Selector Estilizado */
-select,
-.form-control select {
+select:not([class*="flatpickr"]),
+.form-control select:not([class*="flatpickr"]) {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;

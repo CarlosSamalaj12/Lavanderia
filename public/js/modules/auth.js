@@ -45,23 +45,49 @@ export function logout() {
   localStorage.removeItem('user');
   window.token = null;
   window.user = null;
+
+  const loginSection = document.getElementById('loginSection');
+  const nav = document.getElementById('nav');
+  const mobileNav = document.getElementById('mobileBottomNav');
+
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  if (nav) nav.style.display = 'none';
+  if (mobileNav) mobileNav.style.display = 'none';
+  if (loginSection) loginSection.style.display = 'block';
+
   location.reload();
 }
 
 export function verificarToken() {
   const currentToken = window.token || localStorage.getItem('token');
-  if (!currentToken) return;
+  if (!currentToken) {
+    logout();
+    return;
+  }
 
   fetch(window.buildApiUrl ? window.buildApiUrl('auth/verify') : `/api/auth/verify`, {
-    headers: { 'x-access-token': currentToken }
+    headers: { 'x-access-token': currentToken },
+    cache: 'no-store'
   })
-    .then(res => res.ok ? res.json() : Promise.reject())
+    .then(async res => {
+      if (res.status === 401 || res.status === 403 || !res.ok) {
+        throw new Error('Sesión no válida o expirada');
+      }
+      return res.json();
+    })
     .then(data => {
+      if (!data || !data.user) {
+        throw new Error('Estructura de usuario no válida');
+      }
       window.user = data.user;
+      window.token = currentToken;
       localStorage.setItem('user', JSON.stringify(data.user));
       showApp();
     })
-    .catch(() => logout());
+    .catch((err) => {
+      console.warn('Verificación de sesión fallida:', err.message);
+      logout();
+    });
 }
 
 export function showApp() {

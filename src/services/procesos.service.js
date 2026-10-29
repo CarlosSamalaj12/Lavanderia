@@ -37,12 +37,17 @@ const procesosService = {
         pp.id,
         pp.prenda_id,
         p.nombre as prenda_nombre,
+        p.descripcion as prenda_descripcion,
         pp.proceso,
         pp.cantidad,
         pp.fecha_ingreso,
+        pp.fecha_actualizacion,
+        pp.departamento_actual,
+        d.nombre as departamento_nombre,
         u.nombre as usuario_ingreso
       FROM prendas_proceso pp
       JOIN prendas p ON pp.prenda_id = p.id
+      LEFT JOIN departamentos d ON pp.departamento_actual = d.id
       LEFT JOIN usuarios u ON pp.usuario_registro = u.id
       WHERE pp.proceso = ?${whereStock}
       ORDER BY pp.fecha_ingreso DESC
@@ -110,7 +115,7 @@ const procesosService = {
       throw err;
     }
 
-    const procesoAsignar = estado_prenda === 'limpio' ? 'limpio' : 'sucio';
+    const procesoAsignar = PROCESOS.includes(proceso) ? proceso : (estado_prenda === 'limpio' ? 'limpio' : 'sucio');
     const sql = `
       INSERT INTO prendas_proceso (prenda_id, proceso, cantidad, departamento_actual, usuario_registro)
       VALUES (?, ?, ?, ?, ?)
@@ -271,6 +276,64 @@ const procesosService = {
       GROUP BY pp.prenda_id, p.nombre
     `;
     return await dbAsync.all(sql, [departamento_id]);
+  },
+
+  async obtenerTableroKanban() {
+    const PROCESOS_LISTA = ['sucio', 'remojo', 'lavado', 'tendido', 'recogido', 'reproceso', 'limpio', 'planchado', 'desmanche', 'stock'];
+    const sql = `
+      SELECT
+        pp.id as registro_id,
+        pp.prenda_id,
+        p.nombre as prenda_nombre,
+        p.descripcion as prenda_descripcion,
+        p.requiere_plancha,
+        pp.proceso,
+        pp.cantidad,
+        pp.fecha_ingreso,
+        pp.fecha_actualizacion,
+        pp.departamento_actual,
+        d.nombre as departamento_nombre,
+        u.nombre as usuario_nombre,
+        t.id as tarea_id,
+        t.trabajador_id,
+        tr.nombre as trabajador_nombre,
+        t.precio_unitario,
+        t.total as total_pago,
+        t.estado as tarea_estado
+      FROM prendas_proceso pp
+      JOIN prendas p ON pp.prenda_id = p.id
+      LEFT JOIN departamentos d ON pp.departamento_actual = d.id
+      LEFT JOIN usuarios u ON pp.usuario_registro = u.id
+      LEFT JOIN tareas t ON t.id = (
+        SELECT id FROM tareas 
+        WHERE prenda_id = pp.prenda_id AND proceso = pp.proceso AND estado IN ('asignada', 'en_proceso') 
+        ORDER BY id DESC LIMIT 1
+      )
+      LEFT JOIN trabajadores tr ON t.trabajador_id = tr.id
+      WHERE (pp.proceso != 'stock' OR pp.departamento_actual IS NULL)
+      ORDER BY pp.fecha_actualizacion DESC
+    `;
+    const filas = await dbAsync.all(sql);
+
+    const tablero = {};
+    PROCESOS_LISTA.forEach(p => {
+      tablero[p] = {
+        proceso: p,
+        total_prendas: 0,
+        total_lotes: 0,
+        lotes: []
+      };
+    });
+
+    (filas || []).forEach(fila => {
+      if (tablero[fila.proceso]) {
+        tablero[fila.proceso].lotes.push(fila);
+        tablero[fila.proceso].total_prendas += Number(fila.cantidad || 0);
+        tablero[fila.proceso].total_lotes += 1;
+      }
+    });
+
+    return tablero;
   }
 };
 

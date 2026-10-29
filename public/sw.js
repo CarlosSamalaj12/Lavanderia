@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lavanderia-shell-v10';
+const CACHE_NAME = 'lavanderia-shell-v18';
 const APP_SHELL = [
   './',
   './index.html',
@@ -24,6 +24,9 @@ const APP_SHELL = [
   './css/components/pedidos.css',
   './css/components/dashboard.css',
   './css/components/tareas.css',
+  './css/components/calendar.css',
+  './css/components/stitch-catalog.css',
+  './css/components/procesos-modern.css',
   './js/core/state.js',
   './js/core/api.js',
   './js/core/ui.js',
@@ -59,17 +62,30 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
+  const url = new URL(event.request.url);
+  // Jamás interceptar ni cachear rutas dinámicas de la API
+  if (url.pathname.startsWith('/api') || url.pathname.includes('/api/')) {
+    return;
+  }
 
-      return fetch(event.request)
-        .then((response) => {
+  // Network-First para siempre servir la versión más reciente en desarrollo/producción
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => caches.match('./index.html'));
-    })
+        }
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cached) => {
+          if (cached) return cached;
+          if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
+            return caches.match('./index.html');
+          }
+          return Promise.reject('Recurso no disponible offline');
+        });
+      })
   );
 });

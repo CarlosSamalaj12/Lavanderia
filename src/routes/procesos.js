@@ -4,6 +4,7 @@ const procesosController = require('../controllers/procesos.controller');
 const { verifyToken, requireEncargado, requireAnyRole } = require('../middleware/auth');
 
 router.get('/', verifyToken, procesosController.listar);
+router.get('/kanban', verifyToken, procesosController.obtenerTableroKanban);
 router.get('/por-proceso/:proceso', verifyToken, procesosController.porProceso);
 router.post('/verificar-disponibilidad', verifyToken, procesosController.verificarDisponibilidad);
 router.post('/mover', verifyToken, requireEncargado, procesosController.mover);

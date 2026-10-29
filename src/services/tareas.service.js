@@ -1,12 +1,14 @@
 const dbAsync = require('../utils/db-async');
 const bitacoraService = require('./bitacora.service');
 
-const PROCESOS_PAGADOS = ['remojo', 'lavado', 'desmanche', 'planchado'];
-const PROCESOS_SIN_PAGO = ['tendido', 'recogido', 'reproceso'];
+const PROCESOS_PAGADOS = ['remojo', 'lavado', 'tendido', 'recogido', 'desmanche', 'planchado'];
+const PROCESOS_SIN_PAGO = ['reproceso', 'sucio'];
 const PROCESO_ORIGEN_TAREA = {
   sucio: 'sucio',
   remojo: 'sucio',
   lavado: 'lavado',
+  tendido: 'tendido',
+  recogido: 'recogido',
   desmanche: 'lavado',
   planchado: 'limpio'
 };
@@ -28,6 +30,8 @@ function obtenerPrecioFactura(prenda, proceso) {
     case 'sucio': return 0;
     case 'remojo': return prenda.precio_remojo_factura || 0;
     case 'lavado': return prenda.precio_lavado_factura || 0;
+    case 'tendido': return prenda.precio_tendido_factura || 0;
+    case 'recogido': return prenda.precio_recogido_factura || 0;
     case 'desmanche': return prenda.precio_desmanche_factura || 0;
     case 'planchado': return prenda.precio_planchado_factura || 0;
     default: return 0;
@@ -39,6 +43,8 @@ function obtenerPrecioNormal(prenda, proceso) {
     case 'sucio': return 0;
     case 'remojo': return prenda.precio_remojo || 0;
     case 'lavado': return prenda.precio_lavado || 0;
+    case 'tendido': return prenda.precio_tendido || 0;
+    case 'recogido': return prenda.precio_recogido || 0;
     case 'desmanche': return prenda.precio_desmanche || 0;
     case 'planchado': return prenda.precio_planchado || 0;
     default: return 0;
@@ -496,6 +502,166 @@ const tareasService = {
     });
 
     return { message: 'Tarea cancelada' };
+  },
+
+  async avanzarKanban({
+    prenda_id,
+    cantidad,
+    proceso_origen,
+    proceso_destino,
+    trabajador_id,
+    tarea_id_origen,
+    registro_id
+  }, userId) {
+    const qty = Number(cantidad || 0);
+    if (!prenda_id || !proceso_origen || !proceso_destino || !qty || qty <= 0) {
+      const err = new Error('Prenda, cantidad válida (>0), proceso origen y destino son requeridos');
+      err.status = 400;
+      throw err;
+    }
+
+    // 1. Validar prenda existente
+    const prenda = await dbAsync.get('SELECT * FROM prendas WHERE id = ?', [prenda_id]);
+    if (!prenda) {
+      const err = new Error('Prenda no encontrada');
+      err.status = 404;
+      throw err;
+    }
+
+    // 2. Validar regla de planchado
+    if (proceso_destino === 'planchado' && Number(prenda.requiere_plancha) !== 1) {
+      const err = new Error(`La prenda "${prenda.nombre}" no requiere planchado`);
+      err.status = 400;
+      throw err;
+    }
+
+    // 3. Validar stock disponible en proceso_origen
+    const filtroOrigenStock = proceso_origen === 'stock' ? ' AND departamento_actual IS NULL' : '';
+    const stockRow = await dbAsync.get(
+      `SELECT SUM(cantidad) as total FROM prendas_proceso WHERE prenda_id = ? AND proceso = ?${filtroOrigenStock}`,
+      [prenda_id, proceso_origen]
+    );
+    const stockTotal = stockRow ? Number(stockRow.total || 0) : 0;
+    if (stockTotal < qty) {
+      const err = new Error(`Stock insuficiente en ${proceso_origen.toUpperCase()}. Disponible: ${stockTotal}, solicitado: ${qty}`);
+      err.status = 400;
+      throw err;
+    }
+
+    // 4. Liquidar / completar etapa previa si hay tarea asignada
+    let tareaOrigen = null;
+    if (tarea_id_origen) {
+      tareaOrigen = await dbAsync.get('SELECT * FROM tareas WHERE id = ?', [tarea_id_origen]);
+    } else {
+      tareaOrigen = await dbAsync.get(
+        `SELECT * FROM tareas WHERE prenda_id = ? AND proceso = ? AND estado IN ('asignada', 'en_proceso') ORDER BY id ASC LIMIT 1`,
+        [prenda_id, proceso_origen]
+      );
+    }
+
+    if (tareaOrigen) {
+      const cantTarea = Number(tareaOrigen.cantidad || 0);
+      if (qty >= cantTarea) {
+        // Se completa la tarea entera del operario anterior
+        await dbAsync.run(
+          `UPDATE tareas SET estado = 'completada', fecha_fin = CURRENT_TIMESTAMP WHERE id = ?`,
+          [tareaOrigen.id]
+        );
+      } else {
+        // Pase parcial: la tarea existente se reduce a lo que queda
+        const restante = cantTarea - qty;
+        const precioUnit = Number(tareaOrigen.precio_unitario || 0);
+        await dbAsync.run(
+          `UPDATE tareas SET cantidad = ?, total = ? WHERE id = ?`,
+          [restante, restante * precioUnit, tareaOrigen.id]
+        );
+
+        // Se inserta una tarea completada por la cantidad transferida para pagarle al operario previo
+        await dbAsync.run(
+          `INSERT INTO tareas (trabajador_id, proceso, prenda_id, cantidad, precio_unitario, total, fecha_asignacion, fecha_inicio, fecha_fin, estado)
+           VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP, 'completada')`,
+          [
+            tareaOrigen.trabajador_id,
+            tareaOrigen.proceso,
+            prenda_id,
+            qty,
+            precioUnit,
+            qty * precioUnit,
+            tareaOrigen.fecha_asignacion,
+            tareaOrigen.fecha_inicio
+          ]
+        );
+      }
+    }
+
+    // 5. Mover stock físico
+    await moverStockProceso(prenda_id, proceso_origen, proceso_destino, qty, userId);
+
+    // 6. Asignar nuevo operario en proceso_destino si aplica
+    let nuevaTareaId = null;
+    let totalPagoNuevo = 0;
+    let trabajadorNombre = null;
+    if (trabajador_id && proceso_destino !== 'stock') {
+      const trabajador = await dbAsync.get('SELECT * FROM trabajadores WHERE id = ?', [trabajador_id]);
+      if (!trabajador) {
+        const err = new Error('Trabajador seleccionado no encontrado');
+        err.status = 404;
+        throw err;
+      }
+      trabajadorNombre = trabajador.nombre;
+
+      const precioPersonalizado = await dbAsync.get(
+        'SELECT precio FROM precios_trabajador WHERE trabajador_id = ? AND proceso = ?',
+        [trabajador_id, proceso_destino]
+      );
+
+      const precioBase = PROCESOS_SIN_PAGO.includes(proceso_destino) ? 0 : obtenerPrecio(trabajador, prenda, proceso_destino);
+      const precioFinal = PROCESOS_SIN_PAGO.includes(proceso_destino) ? 0 : (precioPersonalizado ? Number(precioPersonalizado.precio || 0) : Number(precioBase || 0));
+      totalPagoNuevo = precioFinal * qty;
+
+      const sqlInsertTarea = `
+        INSERT INTO tareas (trabajador_id, proceso, prenda_id, cantidad, precio_unitario, total, estado, fecha_asignacion)
+        VALUES (?, ?, ?, ?, ?, ?, 'asignada', CURRENT_TIMESTAMP)
+      `;
+      const resNuevaTarea = await dbAsync.run(sqlInsertTarea, [
+        trabajador_id,
+        proceso_destino,
+        prenda_id,
+        qty,
+        precioFinal,
+        totalPagoNuevo
+      ]);
+      nuevaTareaId = resNuevaTarea.lastID;
+    }
+
+    // 7. Registro en bitácora
+    await bitacoraService.registrar({
+      usuarioId: userId,
+      accion: 'AVANZAR_KANBAN',
+      tablaAfectada: 'prendas_proceso',
+      registroId: nuevaTareaId || registro_id || null,
+      datosNuevos: {
+        prenda_id,
+        prenda_nombre: prenda.nombre,
+        cantidad: qty,
+        proceso_origen,
+        proceso_destino,
+        trabajador_id: trabajador_id || null,
+        trabajador_nombre: trabajadorNombre,
+        nueva_tarea_id: nuevaTareaId,
+        total_pago: totalPagoNuevo
+      }
+    });
+
+    return {
+      message: `Prendas transferidas exitosamente a ${proceso_destino.toUpperCase()}`,
+      prenda: prenda.nombre,
+      cantidad: qty,
+      proceso_destino,
+      nueva_tarea_id: nuevaTareaId,
+      total_pago: totalPagoNuevo,
+      trabajador_nombre: trabajadorNombre
+    };
   }
 };
 

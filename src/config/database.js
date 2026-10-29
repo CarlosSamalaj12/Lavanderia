@@ -45,10 +45,14 @@ function initializeTables() {
         precio_lavado_factura REAL DEFAULT 0,
         precio_desmanche_factura REAL DEFAULT 0,
         precio_planchado_factura REAL DEFAULT 0,
+        precio_tendido_factura REAL DEFAULT 0,
+        precio_recogido_factura REAL DEFAULT 0,
         precio_remojo REAL DEFAULT 0,
         precio_lavado REAL DEFAULT 0,
         precio_desmanche REAL DEFAULT 0,
         precio_planchado REAL DEFAULT 0,
+        precio_tendido REAL DEFAULT 0,
+        precio_recogido REAL DEFAULT 0,
         requiere_plancha INTEGER DEFAULT 1,
         activo INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -188,14 +192,18 @@ function initializeTables() {
       }
     });
 
-    const columnasPrecioFactura = [
+    const columnasPrecioNuevas = [
       'precio_remojo_factura',
       'precio_lavado_factura',
       'precio_desmanche_factura',
-      'precio_planchado_factura'
+      'precio_planchado_factura',
+      'precio_tendido_factura',
+      'precio_recogido_factura',
+      'precio_tendido',
+      'precio_recogido'
     ];
 
-    columnasPrecioFactura.forEach((columna) => {
+    columnasPrecioNuevas.forEach((columna) => {
       db.run(`ALTER TABLE prendas ADD COLUMN ${columna} REAL DEFAULT 0`, (err) => {
         if (err && !err.message.includes('duplicate column name')) {
           console.error(`Error al agregar columna ${columna} en prendas:`, err.message);

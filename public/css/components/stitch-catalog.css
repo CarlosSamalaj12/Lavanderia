@@ -1,0 +1,444 @@
+/* ==========================================================================
+   Stitch Modern Design System - Catálogos y Tablas Empresariales
+   Basado en el diseño de Stitch: "Jardines Lavandería - Catálogo Rediseñado"
+   ========================================================================== */
+
+/* Barra de Breadcrumb */
+.section-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+.section-breadcrumb .mi {
+  font-size: 15px;
+  color: #cbd5e1;
+}
+.section-breadcrumb .crumb-active {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* Header del Catálogo con Acciones */
+.catalog-header-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.catalog-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.catalog-heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.catalog-subtitle {
+  color: #64748b;
+  font-size: 13.5px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 9999px;
+  letter-spacing: 0.2px;
+}
+
+/* Barra de Botones de Acción (Compact Toolbar) */
+.catalog-actions-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Botones con estilo Stitch */
+.btn-stitch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  white-space: nowrap;
+  text-decoration: none;
+  border: 1px solid transparent;
+  min-height: 40px;
+  width: auto !important; /* Anular button width 100% */
+}
+.btn-stitch .mi {
+  font-size: 18px;
+}
+
+.btn-stitch-primary {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.25);
+}
+.btn-stitch-primary:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.35);
+}
+.btn-stitch-primary:active {
+  transform: translateY(0);
+}
+
+.btn-stitch-outline {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.btn-stitch-outline:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Card de Filtros y Leyenda */
+.catalog-filter-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.catalog-search-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+}
+.catalog-search-wrap .search-icon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  font-size: 19px;
+  pointer-events: none;
+}
+.catalog-search-input {
+  width: 100%;
+  padding: 9px 40px 9px 38px;
+  font-size: 13.5px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #1e293b;
+  transition: all 0.2s ease;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+.catalog-search-input:focus {
+  background: #ffffff;
+  border-color: #0284c7;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+.search-shortcut-badge {
+  position: absolute;
+  right: 12px;
+  font-size: 11px;
+  font-family: var(--font-family-mono, monospace);
+  font-weight: 500;
+  color: #94a3b8;
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.catalog-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #64748b;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.legend-dot.bg-emerald { background: #10b981; }
+.legend-dot.bg-amber { background: #f59e0b; }
+
+/* Contenedor y Tabla Estilo Stitch */
+.catalog-table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  margin-top: 14px;
+}
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-stitch {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+  margin: 0 !important;
+}
+
+/* Encabezados de Tabla */
+.table-stitch th {
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border: none;
+  color: #ffffff;
+}
+
+.table-stitch th.th-dark {
+  background: #1e293b;
+  border-right: 1px solid #334155;
+  color: #f8fafc;
+}
+
+.table-stitch th.th-factura-group {
+  background: #059669;
+  text-align: center;
+  border-right: 1px solid #047857;
+  color: #ffffff;
+}
+.table-stitch th.th-factura-sub {
+  background: #047857;
+  text-align: center;
+  font-size: 10.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ecfdf5;
+}
+
+.table-stitch th.th-sinfactura-group {
+  background: #d97706;
+  text-align: center;
+  border-right: 1px solid #b45309;
+  color: #ffffff;
+}
+.table-stitch th.th-sinfactura-sub {
+  background: #b45309;
+  text-align: center;
+  font-size: 10.5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fffbeb;
+}
+
+/* Filas y Celdas */
+.table-stitch td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+.table-stitch tbody tr {
+  transition: background-color 0.15s ease;
+}
+.table-stitch tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.td-prenda-name {
+  font-weight: 600;
+  color: #1e293b;
+  border-right: 1px solid #e2e8f0;
+}
+.table-stitch tbody tr:hover .td-prenda-name {
+  color: #0284c7;
+}
+
+.td-price-factura {
+  background: rgba(16, 185, 129, 0.04);
+  text-align: center;
+  font-family: var(--font-family-mono, monospace);
+  font-size: 12.5px;
+  border-right: 1px solid rgba(16, 185, 129, 0.08);
+  font-variant-numeric: tabular-nums;
+}
+
+.td-price-sinfactura {
+  background: rgba(245, 158, 11, 0.04);
+  text-align: center;
+  font-family: var(--font-family-mono, monospace);
+  font-size: 12.5px;
+  border-right: 1px solid rgba(245, 158, 11, 0.08);
+  font-variant-numeric: tabular-nums;
+}
+
+.td-price-zero {
+  color: #94a3b8 !important;
+}
+
+/* Centrado perfecto de Acciones en Encabezados y Celdas */
+.table-stitch th.th-actions,
+.table-stitch th:last-child {
+  text-align: center !important;
+  width: 110px !important;
+  min-width: 110px !important;
+}
+
+.table-stitch td.td-actions,
+.table-stitch td:last-child {
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 8px 12px !important;
+  white-space: nowrap !important;
+  width: 110px !important;
+  min-width: 110px !important;
+}
+
+.actions-wrap,
+.actions-btn-group,
+.td-actions-wrap {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Botones de acción circulares con iconos minimalistas */
+.btn-action-circle {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  border-radius: 50% !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  outline: none !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-action-circle svg.action-icon {
+  width: 15px !important;
+  height: 15px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  stroke-width: 2 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
+.btn-action-circle:hover {
+  transform: translateY(-1px) scale(1.08) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.16) !important;
+}
+.btn-action-circle:active {
+  transform: scale(0.95) !important;
+}
+
+.btn-action-edit {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+.btn-action-edit:hover {
+  background: #0369a1 !important;
+}
+
+.btn-action-delete {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+.btn-action-delete:hover {
+  background: #dc2626 !important;
+}
+
+/* Footer de información */
+.table-footer-info {
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Colores semánticos auxiliares */
+.text-emerald { color: #059669 !important; }
+.text-sky { color: #0284c7 !important; }
+.text-rose { color: #ef4444 !important; }
+.text-amber { color: #d97706 !important; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .catalog-header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .catalog-actions-toolbar {
+    width: 100%;
+  }
+  .btn-stitch {
+    flex: 1 1 auto;
+  }
+  .catalog-filter-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .catalog-search-wrap {
+    max-width: 100%;
+  }
+}
